@@ -1,0 +1,17 @@
+name: tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  suites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run all hook suites
+        run: |
+          for f in hooks/test-*.sh; do
+            echo "== $f"
+            bash "$f" || exit 1
+          done

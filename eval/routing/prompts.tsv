@@ -1,0 +1,25 @@
+I don't know which of your tools fits, but I want to overhaul this payment module carefully	superstack
+add caching somewhere, the app feels slow lately	superstack-scope
+the login test fails every third run and I can't tell what's going on	superstack-debug
+before I merge this design doc, poke holes in it	superstack-review
+I think the fix is in — make sure it actually holds before we call it	superstack-verify
+wrap this task up and write the final status for the team	superstack-ship
+how healthy is this workspace's record right now?	superstack-status
+I have an idea for a habit-tracking app	superstack-inception
+pick the plan back up where we left off yesterday	superstack-execute
+let's get this version out to npm today	superstack-outward
+stop doing that — from now on never touch the prod config without asking me	superstack-doctrine
+the last session crashed mid-task, pick things up safely	superstack-continuity
+I'm heading out for the night — keep going without me	superstack-autonomy
+the settings page is rebuilt — does it actually look right?	superstack-experiential
+I'm shipping this because it should cut support tickets — hold me to that	superstack-value
+good idea but not now, save it for later	superstack-queue
+Postgres or DynamoDB for this service? settle it	superstack-decide
+I need a project brief but I honestly can't articulate what I want in it	superstack-cocreate
+before we commit to streaming, is it even workable with our current broker?	superstack-spike
+checkout is throwing 500s for real customers right now	superstack-incident
+we need to split the users table in production without losing a row	superstack-migrate
+help me actually understand how our queue consumer works	superstack-teach
+Django 4.2 hits end of life soon, get us current	superstack-deps
+put together the monthly progress note for my manager	superstack-digest
+superstack could use a new module for API-contract testing	superstack-smith

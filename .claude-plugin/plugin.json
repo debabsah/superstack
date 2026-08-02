@@ -1,0 +1,20 @@
+{
+  "name": "superstack",
+  "version": "0.8.0",
+  "description": "Where your goals, corrections, and evidence live across every session, with deterministic gates that enforce them. Per-workspace git-ignored .superstack/ state carries the project's goal (surfaced at every session start), your corrections minted as standing doctrine, the calibration record of every done-claim, campaign plans with their frontier, and parked work, so a cold session starts knowing what the work is for. The enforcement arm is deterministic hooks that fire whether or not any skill loads: two Stop-hook gates bounce completion claims that lack a Verified/Assumed/PROVISIONAL evidence ledger (one adds a look-step for changed artifacts with a face), a PreToolUse gate holds publish commands (push, PR create/merge, release, npm publish, docker push, terraform/kubectl apply) until a fresh go-public sweep receipt exists, and a prompt-time door offers shaping when a raw idea arrives in an unshaped workspace. Behind that spine sits the specialist bench: a calibration kernel (method plus scope/debug/review/verify/ship/status runners dispatching a capability-confined reviewer agent) and eighteen lifecycle modules: superstack-inception (idea admission), superstack-execute (multi-session campaigns), superstack-incident (live incidents), superstack-migrate (data migrations), superstack-deps (dependency upgrades), superstack-spike (feasibility spikes), superstack-decide (decision records), superstack-cocreate (co-created specs), superstack-teach (calibrated walkthroughs), superstack-digest (period reports), superstack-value (outcome predictions), superstack-queue (parked work), superstack-continuity (resume and handoff), superstack-autonomy (unattended mandates), superstack-doctrine (corrections as standing law), superstack-outward (the go-public sweep), superstack-experiential (artifacts with a face), and superstack-smith (the admission gate for new skills), routed to by description on a best-effort basis, or called directly by slash command. Complements Claude Code's /goal: /goal checks a goal you type in one session; superstack is where goals live across all of them. Zero residue, and no dependency on any other plugin or skill.",
+  "author": {
+    "name": "debabsah"
+  },
+  "license": "MIT",
+  "keywords": [
+    "method",
+    "discipline",
+    "verification",
+    "calibration",
+    "publishing",
+    "doctrine",
+    "inception",
+    "workflow",
+    "superstack"
+  ]
+}
