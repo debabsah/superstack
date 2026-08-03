@@ -6,9 +6,25 @@ on:
 
 jobs:
   suites:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
+      - name: Ensure jq exists (the hooks fail open without it, which would fake a green)
+        run: |
+          command -v jq && jq --version && exit 0
+          case "$(uname -s)" in
+            MINGW*|MSYS*|CYGWIN*) choco install jq -y ;;
+            Darwin) brew install jq ;;
+            *) sudo apt-get update && sudo apt-get install -y jq ;;
+          esac
+          command -v jq
       - name: Run all hook suites
         run: |
           for f in hooks/test-*.sh; do

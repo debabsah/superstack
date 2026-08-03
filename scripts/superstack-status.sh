@@ -94,6 +94,21 @@ fi
 # Everything below: the superstack-owned state files the kernel doctor
 # predates (KERNEL.md deviation 12) — absent files stay silent, and every
 # count grammar mirrors hooks/inject-superstack.sh (R2: two callers, one rule).
+if [ -d "$f/tasks" ]; then
+  for tf in "$f/tasks"/*.md; do
+    [ -f "$tf" ] || continue
+    grep -q '^## sheet' "$tf" 2>/dev/null || continue
+    slug="$(basename "$tf" .md)"
+    # Topic DEFINITION lines only — receipt: and revisit: lines legally share
+    # a topic's id and must never count as duplicates.
+    defs="$(grep -E '^- T[0-9]+ ' "$tf" 2>/dev/null | grep -vE '^- T[0-9]+ (receipt|revisit):')"
+    tn="$(printf '%s\n' "$defs" | grep -c '^- T')"
+    opn="$(printf '%s\n' "$defs" | grep -c 'status:open')"
+    dup="$(printf '%s\n' "$defs" | grep -oE '^- T[0-9]+' | sort | uniq -d | sed 's/^- //' | tr '\n' ' ' | sed 's/ $//')"
+    echo "sheet: $slug — $tn topic(s), $opn open${dup:+ — DUPLICATE topic id(s): $dup}"
+  done
+fi
+
 if [ -d "$f/plans" ]; then
   for pf in "$f/plans"/*.md; do
     [ -f "$pf" ] || continue

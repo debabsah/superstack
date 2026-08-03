@@ -49,7 +49,7 @@ What superstack does about them: the goal and the stopping point ride in files o
 
 **How you know it's working:** your next session in any project opens with one `superstack:` line (a fresh workspace gets a one-time overlay offer). Type an idea-shaped prompt like "create a mario game in a single html document" in an empty folder and the front door offers to shape it first. `/superstack:superstack-status` reports the workspace record any time.
 
-**Requirements:** Claude Code with plugin support; Bash, git, `jq`, and standard POSIX tools; a capable model at medium-or-higher effort. Hooks are shell scripts, developed and tested on macOS and Linux; Windows is untested (WSL should behave like Linux, unverified).
+**Requirements:** Claude Code with plugin support; Bash, git, `jq`, and standard POSIX tools; a capable model at medium-or-higher effort. Hooks are shell scripts, tested on macOS, Linux, and Windows (under Git Bash) in CI on every push; on native Windows install Git Bash and `jq` first, and WSL behaves like Linux.
 
 > [!IMPORTANT]
 > `jq` is load-bearing: without it, the publish gate and the prompt-time door fail open, silently disabled while everything else keeps working. Install it to keep the whole safety layer armed.
@@ -139,8 +139,8 @@ Eighteen lifecycle modules around it, by the moment they serve:
 
 **Starting something**
 
-- `superstack-inception`: shapes a raw idea before building starts
-- `superstack-cocreate`: probe rounds when you can't state requirements yet
+- `superstack-inception`: shapes a raw idea before building starts; when you would rather react to options than answer questions, it hands the middle to cocreate and finishes after
+- `superstack-cocreate`: probe rounds when you can't state requirements yet; on its own it shapes a doc, spec, or schema inside an existing project, no new idea required
 - `superstack-spike`: time-boxed feasibility probes, harvested then discarded
 - `superstack-decide`: technical forks recorded as decision records
 

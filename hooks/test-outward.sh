@@ -58,7 +58,15 @@ printf '%s\n' 'SWEEP FAILED: 14 live AWS keys found. DO NOT PUBLISH. — finding
 check "SWEEP FAILED receipt does not vouch"         2 "$(payload Bash 'docker push repo/img:3')"
 printf '%s\n' '2026-07-31 17:00 swept: repo delta — findings: none' > "$tmp/elsewhere-pass"
 ln -sf "$tmp/elsewhere-pass" .superstack/outward-pass
-check "symlinked receipt does not vouch"            2 "$(payload Bash 'docker push repo/img:4')"
+# Windows without symlink privilege makes ln -sf a silent COPY, so the fixture
+# cannot exist there and the attack class it guards against mostly cannot
+# either — skip with a said reason rather than fail on a phantom.
+if [ -L .superstack/outward-pass ]; then
+  check "symlinked receipt does not vouch"          2 "$(payload Bash 'docker push repo/img:4')"
+else
+  echo "SKIP: symlinked receipt (this platform cannot create symlinks; ln -sf copied)"
+  rm -f .superstack/outward-pass
+fi
 printf '%s\n' 'ran the sweep, all good' > .superstack/outward-pass
 check "a receipt without a findings line does not vouch" 2 "$(payload Bash 'docker push repo/img:5')"
 rm -f .superstack/outward-pass

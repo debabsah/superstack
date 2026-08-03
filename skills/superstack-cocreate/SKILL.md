@@ -1,13 +1,13 @@
 ---
 name: superstack-cocreate
-description: A wanted text artifact with latent requirements — doc, plan, spec, schema, API shape — where direct questions get "I don't know, show me options" and requirements arrive as reactions. Also when an approach menu can't get a pick, and on "probe rounds". Skip when requirements are statable (interview) and for visual/UI artifacts (design tools own those).
+description: A wanted artifact with latent requirements — doc, plan, spec, schema, API shape, a look — where questions get "show me options" and requirements arrive as reactions. Also when a menu can't get a pick, and on "probe rounds". Skip when requirements are statable (interview) and for a new idea (superstack-inception).
 ---
 
 # superstack-cocreate
 
 People can't describe what they want, but they recognize it on sight. Probes make recognition cheap — and a reaction is data only if you know exactly what it was reacting to.
 
-The description's deferrals (a spec tool when requirements turn out statable; a design-variant tool for visual artifacts) hold only when such a tool is actually installed — confirm it appears in this session's skill listing before handing off, and say so; absent, these rounds cover the ask.
+The description's deferral (a spec tool when requirements turn out statable) holds only when such a tool is actually installed — confirm it appears in this session's skill listing before handing off, and say so; absent, these rounds cover the ask. A look axis is probed with rendered artifacts in the native consumption medium — an HTML page, a terminal transcript, a paginated document — never with prose describing a look; a design-variant tool takes the render only when one is installed.
 
 ## The round
 
@@ -21,7 +21,7 @@ The description's deferrals (a spec tool when requirements turn out statable; a 
 
 - **Cap at ~3 rounds.** Still foggy → the fog is the finding: fall back to direct interrogation (superstack-inception / superstack-scope), or park via superstack-queue with what the rounds did settle.
 - **Probes are discarded at convergence — say so.** Only the ratified ledger and the final artifact survive.
-- Converged → **if you entered from inception, return there**: the ratified premises join its ledger and its remaining stages (the lock, the offered cold-read, the priced menu) still run. Standalone → hand the ratified ledger to **superstack-scope**: "done" gets its named external check there, and the real artifact gets built once, against requirements that are now statable.
+- Converged → **if you entered from an inception sheet, you settled ONE topic: return there.** The ratified premises join inception's ledger; the sheet, its order, and the finish line stay inception's — this skill never owns the close. Standalone (an already-named decision outside a shaping session) → hand the ratified ledger to **superstack-scope**: "done" gets its named external check there, and the real artifact gets built once, against requirements that are now statable.
 
 ## Red flags
 

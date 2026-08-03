@@ -7,6 +7,13 @@
 # a description — an empty one passes the budget by gutting routing.
 # Tightening the budget is fine; raising it above 8000 needs the owner.
 set -u
+# ${#s} is locale-dependent: under a non-UTF-8 locale it counts BYTES, and an
+# em dash in a description is 3 bytes, so a C-locale runner overcounts against
+# the harness's character math. Pin a UTF-8 locale where one exists; where none
+# does, the byte count only over-tightens the budget, never loosens it.
+for _l in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
+  if locale -a 2>/dev/null | grep -qx "$_l"; then export LC_ALL="$_l"; break; fi
+done
 root="$(cd "$(dirname "$0")/.." && pwd)"
 pass=0; fail=0
 total=0; rows=0

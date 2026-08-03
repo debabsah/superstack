@@ -1,0 +1,16 @@
+# Shell scripts and the extensionless doctor must keep LF: CRLF from a
+# Windows checkout (core.autocrlf=true) breaks bash before any logic runs.
+*.sh            text eol=lf
+hooks/*         text eol=lf
+scripts/*       text eol=lf
+
+# Text formats parsed by newline-anchored greps in the suites.
+*.md            text eol=lf
+*.json          text eol=lf
+*.yml           text eol=lf
+*.tsv           text eol=lf
+
+# Binaries are never rewritten.
+*.png           binary
+*.jpg           binary
+*.svg           text eol=lf

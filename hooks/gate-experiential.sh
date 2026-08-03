@@ -39,17 +39,6 @@ last="$(printf '%s' "$last" | sed -E 's/\\[nrt]/ /g; s/\\"/"/g')"
 # to gate-claims.sh; speaking here too would double-bounce it.
 printf '%s' "$last" | grep -qE '(Verified|Assumed): *[^ "]|PROVISIONAL' || exit 0
 
-# Did anyone look? Deliberately GENEROUS — this is a new trigger with no track
-# record, so every ambiguity resolves toward silence. Note what is NOT here:
-# a bare "saw". The canonical ledger line is "ran <cmd> -> saw <result>", so
-# "saw" is satisfied by "ran pytest -> saw 40 passed" — which IS the failure
-# this gate exists to catch. The honest-downgrade phrases pass on purpose:
-# labelling the gap costs one line and is a legal answer, exactly as
-# Assumed:/PROVISIONAL are to the claims gate.
-judge="$(printf '%s' "$last" | tr '[:upper:]' '[:lower:]')"
-lookre='(screenshot|screen shot|in the browser|opened (the |a )?(page|browser|url|app|dashboard|file|report)|render(s|ed|ing)|viewport|clicked|on screen|looked at|look-step|headless|playwright|puppeteer|devtools|visually|not looked at|needs your eyes|not seen|unlooked)'
-printf '%s' "$judge" | grep -qE "$lookre" && exit 0
-
 # Did THIS turn change something with a face? Judged only on structured tool
 # inputs, so prose naming a filename cannot arm it. Accepted misses, priced:
 # a face written by a shell redirect, and a face whose extension is not listed.
@@ -71,22 +60,69 @@ hit="$(printf '%s\n' "$seg" | grep -E "$mutre" | grep -oE "$facere" | head -n 1)
 [ -n "$hit" ] || exit 0
 ext="$(printf '%s' "$hit" | sed -E 's/.*\.([a-z]+)"$/\1/')"
 
-# Log through the one shared root rule (hooks/superstack-root.sh), into the same
-# gate-log the claims gate writes. The marker is `LOOK-BOUNCE`, which cannot be
-# matched by the doctor's ' BOUNCE phrase=' / ' PASS phrase=' greps — a look
-# bounce must not inflate the claims-gate tallies it reads.
+# Shared root rule (hooks/superstack-root.sh); both bounce paths log into the
+# same gate-log the claims gate writes, under markers the doctor's claims-gate
+# greps cannot match — a look or face bounce must not inflate those tallies.
 . "$(dirname "$0")/superstack-root.sh" 2>/dev/null
 root="$(superstack_root 2>/dev/null)"; [ -n "$root" ] || root="."
 log="$root/.superstack/gate-log"
-if [ -d "$root/.superstack" ]; then
-  printf '%s LOOK-BOUNCE ext=%s snippet=%s\n' "$(date +%F)" "$ext" "$(printf '%s' "$last" | cut -c1-120)" >> "$log"
-  # Same bound the claims gate keeps, for the same reason: this hook appends on
-  # every armed turn, so the writer owns the cap rather than a model habit.
-  if [ "$(wc -l < "$log" 2>/dev/null || echo 0)" -gt 200 ]; then
-    t="$(mktemp "$log.XXXXXX" 2>/dev/null)" && tail -n 200 "$log" > "$t" 2>/dev/null && mv "$t" "$log" || rm -f "$t"
+logline() {
+  if [ -d "$root/.superstack" ]; then
+    printf '%s %s %s snippet=%s\n' "$(date +%F)" "$1" "$2" "$(printf '%s' "$last" | cut -c1-120)" >> "$log"
+    # Same bound the claims gate keeps, for the same reason: this hook appends
+    # on every armed turn, so the writer owns the cap rather than a model habit.
+    if [ "$(wc -l < "$log" 2>/dev/null || echo 0)" -gt 200 ]; then
+      t="$(mktemp "$log.XXXXXX" 2>/dev/null)" && tail -n 200 "$log" > "$t" 2>/dev/null && mv "$t" "$log" || rm -f "$t"
+    fi
   fi
+}
+
+# The face-receipt clause: with a face mutated this turn, a sheet [face] topic
+# still open, or settled without its receipt line, bounces BEFORE look language
+# is consulted — the receipt records the USER's reaction, which the model's own
+# look cannot substitute. Grammar: superstack-inception's sheet block. Suite:
+# hooks/test-face-receipt.sh.
+badline=""
+for tf in "$root"/.superstack/tasks/*.md; do
+  [ -f "$tf" ] || continue
+  badline="$(grep -E '^- T[0-9]+ \[face\].*status:open' "$tf" 2>/dev/null | head -n 1)"
+  [ -n "$badline" ] && break
+  settled="$(grep -E '^- T[0-9]+ \[face\].*status:(grounded|assumed)' "$tf" 2>/dev/null)"
+  while IFS= read -r l; do
+    [ -n "$l" ] || continue
+    tid="$(printf '%s' "$l" | grep -oE '^- T[0-9]+' | sed 's/^- //')"
+    [ -n "$tid" ] || continue
+    grep -qE "^- $tid receipt:" "$tf" 2>/dev/null || { badline="$l"; break; }
+  done <<SETTLED
+$settled
+SETTLED
+  [ -n "$badline" ] && break
+done
+if [ -n "$badline" ]; then
+  tid="$(printf '%s' "$badline" | grep -oE 'T[0-9]+' | head -n 1)"
+  logline "FACE-BOUNCE" "topic=$tid"
+  cat >&2 <<MSG
+superstack look-step gate: this turn built on a face while the sheet holds an unreacted face topic ($tid). A [face] topic settles only by the user reacting to a rendered artifact — the model looking is not the user reacting. Do ONE of these:
+- Render the variants, get the user's reaction, append the receipt line to the task file (- $tid receipt: <artifact> — reaction: "<their words>") and flip the topic's status.
+- If the user already reacted, append the receipt line that records it.
+- If this build genuinely precedes shaping, say so and continue: the continuation passes, and the bounce is logged.
+(Knob: SUPERSTACK_GATES=all|claims|off — claims or off silences this gate.)
+MSG
+  exit 2
 fi
 
+# Did anyone look? Deliberately GENEROUS — this is a new trigger with no track
+# record, so every ambiguity resolves toward silence. Note what is NOT here:
+# a bare "saw". The canonical ledger line is "ran <cmd> -> saw <result>", so
+# "saw" is satisfied by "ran pytest -> saw 40 passed" — which IS the failure
+# this gate exists to catch. The honest-downgrade phrases pass on purpose:
+# labelling the gap costs one line and is a legal answer, exactly as
+# Assumed:/PROVISIONAL are to the claims gate.
+judge="$(printf '%s' "$last" | tr '[:upper:]' '[:lower:]')"
+lookre='(screenshot|screen shot|in the browser|opened (the |a )?(page|browser|url|app|dashboard|file|report)|render(s|ed|ing)|viewport|clicked|on screen|looked at|look-step|headless|playwright|puppeteer|devtools|visually|not looked at|needs your eyes|not seen|unlooked)'
+printf '%s' "$judge" | grep -qE "$lookre" && exit 0
+
+logline "LOOK-BOUNCE" "ext=$ext"
 cat >&2 <<MSG
 superstack look-step gate: this turn changed an artifact with a face (.$ext) and every piece of evidence in it comes from the layer below. Do ONE of these:
 - Enter the modality NOW — open the page, render the chart, run the CLI and read its output as its user would — then restate what you literally saw:

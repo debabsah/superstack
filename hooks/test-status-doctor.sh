@@ -21,6 +21,11 @@ git init -q -b main "$tmp/full"; s="$tmp/full/.superstack"
 mkdir -p "$s/tasks" "$s/plans"
 printf '%s\n' '<!-- pointer: proj — oracle: make test -->' > "$s/project.md"
 printf '<!-- task: t — goal: g — next: n -->\n' > "$s/tasks/t.md"
+{ printf '<!-- task: sheeted — goal: g — next: settle T5 -->\n## sheet\n'
+  printf -- '- T4 [face] the look — regret:med cost:loose status:grounded — evidence: pick\n'
+  printf -- '- T4 receipt: mock.html — reaction: "B"\n'
+  printf -- '- T5 run model — regret:med cost:baked status:grounded — evidence: pick\n'
+  printf -- '- T5 run model — regret:med cost:baked status:open — unknowns: where output lives — enough-when: pick\n'; } > "$s/tasks/sheeted.md"
 printf -- '- Assumed: x — y — z\n' > "$s/residuals.md"
 printf '2026-07-30 BOUNCE phrase=done snippet=x\n2026-07-30 PASS phrase=verified snippet=y\n' > "$s/gate-log"
 printf '2026-07-30 Verified: suite green — receipt: r\n' > "$s/claims-log"
@@ -49,6 +54,10 @@ check "toured record reported"              "toured: 1" "$out"
 check "skipped gates open count reported"   "skipped gates: 1 open" "$out"
 check "outward tallies reported"            "outward: 1 bounce" "$out"
 check "receipts reported"                   "receipts: 2" "$out"
+check "sheet counts reported"               "sheet: sheeted — 3 topic(s), 1 open" "$out"
+check "duplicate topic id flagged"          "DUPLICATE topic id(s): T5" "$out"
+if printf '%s' "$out" | grep -q "DUPLICATE.*T4"; then fail=$((fail+1)); echo "FAIL: receipt line miscounted as duplicate"
+else pass=$((pass+1)); echo "PASS: receipt lines never count as duplicates"; fi
 if [ "$ec" -eq 0 ]; then pass=$((pass+1)); echo "PASS: exit 0 on full state"
 else fail=$((fail+1)); echo "FAIL: exit $ec on full state"; fi
 if [ "$before" = "$after" ]; then pass=$((pass+1)); echo "PASS: doctor wrote nothing"

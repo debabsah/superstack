@@ -1,6 +1,6 @@
 {
   "name": "superstack",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Coding agents lose the goal across compactions and cold sessions; superstack keeps it. A per-workspace record carries your goals, corrections, and evidence, surfaced at every session start, and shell hooks fire at the chokepoints whether or not a skill loads: the claims gate bounces a bare done-claim, the publish gate holds a push until a fresh sweep exists. Specialist skills cover the lifecycle from shaping an idea to shipping it.",
   "author": {
     "name": "debabsah"

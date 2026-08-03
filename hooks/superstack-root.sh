@@ -21,7 +21,12 @@ superstack_root() {
     (cd "$_ssr_d" 2>/dev/null && pwd -P) && return 0
   fi
   _ssr_r="$(cd "$_ssr_d" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null)"
-  if [ -n "$_ssr_r" ]; then printf '%s\n' "$_ssr_r"; return 0; fi
+  if [ -n "$_ssr_r" ]; then
+    # Re-resolve git's answer through pwd -P: Windows git speaks C:/ drive
+    # form while the shell speaks /c/ MSYS form, and callers compare these.
+    (cd "$_ssr_r" 2>/dev/null && pwd -P) && return 0
+    printf '%s\n' "$_ssr_r"; return 0
+  fi
   (cd "$_ssr_d" 2>/dev/null && pwd -P) || printf '%s\n' "$_ssr_d"
   return 0
 }
