@@ -19,6 +19,7 @@ Autonomy is contract-shaped: the human's absence changes what you owe, not what 
   `- G<n> (<date>) <what was skipped> — close: <exact instruction for the human>`
   Mark closed by appending `[closed <date>]` to the line — the SessionStart line counts open entries until then.
 - **Commit per verified step** (checks before each commit), so any death point is resumable.
+- **Branch first.** Unattended work never starts on the default branch unless the mandate names it; a worktree isolates multi-file rewrites, and the merge back rides the return report.
 - **Wait honestly.** Declare idleness instead of manufacturing work; pre-commit the wake condition when watching something external; on wake, re-verify the green you were waiting for rather than trusting it ("1m34s seems fast for two database containers" is the right instinct).
 
 ## After: the account

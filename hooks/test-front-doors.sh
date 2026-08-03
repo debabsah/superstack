@@ -2,7 +2,9 @@
 # Front-door completeness: every module skill is named in every enumerated surface.
 # The 0.5.0 release proved this rots when left to memory (marketplace.json shipped
 # saying "nine modules" while eighteen existed; caught a release later by reviewers,
-# not by any check). This makes the roster mechanical. Kernel runner dirs are exempt:
+# not by any check). This makes the roster mechanical. The manifests carry no
+# roster (DECISIONS.md D-35), so README is the one enumerated surface; re-enlist
+# any surface below if it starts enumerating modules again. Kernel runner dirs are exempt:
 # they are covered by prose ("the kernel: ... runners"), and the gateway's own
 # front-door clause is pinned by KERNEL.md's invariant check, not here.
 set -u
@@ -12,7 +14,7 @@ kernel="superstack-scope superstack-debug superstack-review superstack-verify su
 for d in "$root"/skills/superstack-*/; do
   name="$(basename "$d")"
   case " $kernel " in *" $name "*) continue ;; esac
-  for surface in README.md .claude-plugin/plugin.json .claude-plugin/marketplace.json; do
+  for surface in README.md; do
     if grep -q "$name" "$root/$surface"; then pass=$((pass+1))
     else fail=$((fail+1)); echo "FAIL: $name missing from $surface"; fi
   done

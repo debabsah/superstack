@@ -111,7 +111,7 @@ What it costs: the hooks are local shell, no model calls, milliseconds per event
 
 ## The specialist bench
 
-None of these fire on their own; the spine above is what's guaranteed. Type what you want in a plain sentence and Claude routes to a specialist from its description, best-effort; it is normal for several to work one task in sequence.
+None of these fire on their own; only the spine above is guaranteed to fire. Type what you want in a plain sentence and Claude routes to a specialist from its description, best-effort; it is normal for several to work one task in sequence.
 
 The calibration kernel (the `superstack` method skill with its `scope · debug · review · verify · ship · status` runners) owns building and claiming: work scoped against a named check, verified at the layer of the claim, and risk-tiered. Adversarial review at the higher tiers runs through a dispatched reviewer agent that cannot edit what it reviews; its tool allowlist has no write access, enforced by the harness rather than by asking.
 

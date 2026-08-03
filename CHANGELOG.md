@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.0 (2026-08-03)
+
+- **Honest enforcement language**: the manifests no longer say
+  "deterministic gates that enforce them". Firing is deterministic (hooks
+  run on the harness event whether or not a skill loads); enforcement is
+  heuristic, logged, and one-bounce overridable, and both manifests now
+  carry that disclosure. The README's "what's guaranteed" line sharpened
+  to "guaranteed to fire".
+- **Slimmer manifests**: the plugin description drops the module roster
+  and hardcoded counts for a short pain-first form; the marketplace entry
+  keeps a fuller paragraph. No public surface lists a skill count that can
+  go stale.
+- **Delegation mechanics in the campaign runner**: delegated
+  implementation gets a small brief (the step's grain, done-when, and
+  named check; never the plan file or the session's history); every
+  dispatch names its model tier; a step that rewrites many files runs in
+  its own git worktree, and a worktree the session did not create is
+  never deleted. Unattended work branches first unless the mandate names
+  the default branch.
+
 ## 0.8.0 (2026-08-01)
 
 The first public-facing cut, built as a milestone campaign: every milestone
