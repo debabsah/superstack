@@ -7,8 +7,8 @@
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-1f6feb?style=flat-square" alt="License: MIT">
-  <img src="https://img.shields.io/badge/version-0.8.0-8250df?style=flat-square" alt="Version 0.8.0">
-  <img src="https://img.shields.io/badge/tests-16%20suites-3fb950?style=flat-square" alt="Tests: 16 suites">
+  <img src="https://img.shields.io/badge/version-1.0.0-8250df?style=flat-square" alt="Version 1.0.0">
+  <img src="https://img.shields.io/badge/tests-19%20suites-3fb950?style=flat-square" alt="Tests: 19 suites">
   <img src="https://img.shields.io/badge/routing%20eval-24%2F25-d29922?style=flat-square" alt="Routing eval: 24 of 25">
 </p>
 
