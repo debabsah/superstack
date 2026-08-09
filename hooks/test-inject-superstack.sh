@@ -86,6 +86,23 @@ rm -f "$tmp/repo/.superstack/queue.md"
 out="$(run startup)"
 check "absent value-log and queue are silent"        '!prediction' "$out"
 
+# -- D-70: the domain-language line ----------------------------------------
+# Glossary only, with its defenses: entries without an owner ack are
+# proposals and never surface, expired entries drop, and the line carries
+# count plus pointer, never term content — the ambient voice cannot turn the
+# glossary into a spec.
+printf -- '- vibe: an unratified term\n' > "$tmp/repo/.superstack/domain.md"
+out="$(run startup)"
+check "proposal-only domain file stays silent"       '!superstack domain' "$out"
+printf -- '- frontier: the plan edge [ack: 2026-08-01]\n- vibe: an unratified term\n' > "$tmp/repo/.superstack/domain.md"
+out="$(run startup)"
+check "an acked term surfaces the domain line"       "superstack domain: 1 term" "$out"
+check "the domain line never carries term content"   '!plan edge' "$out"
+printf -- '- old: gone [ack: 2026-01-01] [expires: 2026-02-01]\n' > "$tmp/repo/.superstack/domain.md"
+out="$(run startup)"
+check "an expired term does not surface"             '!superstack domain' "$out"
+rm -f "$tmp/repo/.superstack/domain.md"
+
 
 # v0.3.1: co-installed estate seam line (D-2)
 mkdir -p "$tmp/repo/.godmode"

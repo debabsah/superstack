@@ -5,7 +5,7 @@ description: Use when behavior contradicts expectation — a bug, an unexplained
 
 # superstack-debug
 
-A bug is a wrong **belief**, not just a wrong line. Fix your model of the system first; the code change then falls out. Never debug by mutation — "change something, rerun, hope" burns evidence and moves the bug around.
+A bug is a wrong **belief**, not just a wrong line. Fix your model of the system first; the code change then falls out. Never debug by mutation — "change something, rerun, hope" burns evidence and moves the bug around. **The front gate:** the red comes first — a debug run opens by running the reproducing command this session, or by saying plainly it cannot reproduce yet and instrumenting for capture; a theory offered before the red is on screen is not debugging.
 
 ## The procedure
 

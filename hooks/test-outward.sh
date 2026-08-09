@@ -117,6 +117,62 @@ check "empty payload fails open"                    0 ""
 # accepted cost, pinned so a change is a conscious decision:
 check "quoted verb in echo arms (one-bounce blast radius, documented)" 2 "$(payload Bash 'echo "git push is how you publish"')"
 
+# -- D-68: the flag-gap respellings (the verified bypass class, Q20) --------
+# `git -C <clone> push` rode past this gate at a real cut: the verb pair was
+# anchored adjacent, so a flag between binary and verb matched nothing.
+# Paired rows pin both directions — every respelled form bounces, every
+# sibling with the same gap stays silent. Lowercasing folds -C into -c.
+check "git -C <clone> push bounces"                 2 "$(payload Bash 'git -C /tmp/clone push origin main')"
+check "git -c <cfg> push bounces"                   2 "$(payload Bash 'git -c user.email=x@y push')"
+check "git --git-dir push bounces"                  2 "$(payload Bash 'git --git-dir=/x/.git push origin main')"
+check "gh -R <repo> pr merge bounces"               2 "$(payload Bash 'gh -R me/proj pr merge 42 --squash')"
+check "gh -R <repo> release create bounces"         2 "$(payload Bash 'gh -R me/proj release create v1.0.0')"
+check "git -C <clone> pull is silent"               0 "$(payload Bash 'git -C /tmp/clone pull')"
+check "git -C <clone> log is silent"                0 "$(payload Bash 'git -C /tmp/clone log --oneline')"
+check "git stash push is silent"                    0 "$(payload Bash 'git stash push -m wip')"
+check "git log --grep push is silent"               0 "$(payload Bash 'git log --grep push')"
+check "gh -R <repo> pr view is silent"              0 "$(payload Bash 'gh -R me/proj pr view 42')"
+
+# -- D-69: the destructive/production tier consumes an owner grant ----------
+# For the infra applies, docker push, and the registry publishes, an
+# identical retry alone never passes: the gate takes a one-shot grant file
+# the owner writes, consumed by one use. Everything else keeps the
+# one-bounce charter, and the sweep-receipt path is untouched for every
+# tier. The grant is evidence of the owner's authorization, never access
+# control — one file-write the owner can always make.
+check "t3: terraform apply bounces"                 2 "$(payload Bash 'terraform apply -auto-approve')"
+check "t3: the identical retry still bounces (no hash override)" 2 "$(payload Bash 'terraform apply -auto-approve')"
+grep -q ' BOUNCE-t3 ' .superstack/outward-log || { fail=$((fail+1)); echo "FAIL: t3 bounce not logged as its own class"; }
+printf 'grant: terraform apply\n' > .superstack/outward-grant
+check "t3: an owner grant passes the retry"         0 "$(payload Bash 'terraform apply -auto-approve')"
+grep -q ' PASS-grant ' .superstack/outward-log || { fail=$((fail+1)); echo "FAIL: grant pass not logged"; }
+[ ! -e .superstack/outward-grant ] && [ -f .superstack/outward-grant-consumed ] \
+  && { pass=$((pass+1)); echo "PASS: t3: the grant is consumed by its one use"; } \
+  || { fail=$((fail+1)); echo "FAIL: t3: grant not consumed (file still present or no consumed record)"; }
+check "t3: the consumed grant does not vouch again" 2 "$(payload Bash 'terraform apply -auto-approve')"
+printf 'grant: terraform apply\n' > .superstack/outward-grant
+check "t3: a grant naming a different verb does not vouch" 2 "$(payload Bash 'docker push repo/img:t3')"
+printf 'grant:\n' > .superstack/outward-grant
+check "t3: an empty grant line does not vouch"      2 "$(payload Bash 'npm publish --access public')"
+rm -f .superstack/outward-grant
+printf 'grant: kubectl apply\n' > "$tmp/elsewhere-grant"
+ln -sf "$tmp/elsewhere-grant" .superstack/outward-grant
+# Windows without symlink privilege makes ln -sf a silent COPY (the same
+# platform limit the symlinked-receipt row above guards), so the fixture
+# cannot exist there — skip with a said reason rather than fail on a
+# phantom: the copied file is a REAL grant and lawfully vouches.
+if [ -L .superstack/outward-grant ]; then
+  check "t3: a symlinked grant never vouches"       2 "$(payload Bash 'kubectl apply -f t3.yml')"
+else
+  echo "SKIP: symlinked grant (this platform cannot create symlinks; ln -sf copied)"
+fi
+rm -f .superstack/outward-grant .superstack/outward-grant-consumed
+check "everyday publish still bounces once"         2 "$(payload Bash 'git push origin feature-x')"
+check "everyday publish identical retry still passes (one-bounce kept)" 0 "$(payload Bash 'git push origin feature-x')"
+printf '%s\n' '2026-07-31 17:00 swept: repo delta — findings: none' > .superstack/outward-pass
+check "t3 with a fresh sweep receipt still passes (receipt path untouched)" 0 "$(payload Bash 'kubectl apply -f fresh.yml')"
+rm -f .superstack/outward-pass
+
 # -- S4 (PREREG.md §3): the off switch -------------------------------------
 # `claims` keeps only the claims Stop gate, so this PreToolUse gate yields on
 # both `claims` and `off`; unset/unknown stays armed.

@@ -34,7 +34,18 @@ case "$lc" in *--dry-run*) exit 0;; esac
 # gh repo view, terraform plan, kubectl get/rollout, npm view, twine check,
 # cargo build) do not match by construction. The second row is S6 (PREREG.md
 # §3): INTENT §10 step 2's own list, no more than this.
-armre='(^|[^a-z0-9_-])(git push|gh pr (create|merge)|gh release create|npm publish|docker push|terraform apply|kubectl apply|gh repo create|twine upload|(poetry|cargo|uv) publish)([^a-z0-9-]|$)'
+#
+# The flag gaps (D-68): `git -C <clone> push` rode past this gate at a real
+# cut — the verb pair was anchored adjacent, so a flag between binary and
+# verb matched nothing. The gaps admit git's -c-with-arg (the lowercase fold
+# above makes -C the same shape) and long flags before push, and gh's
+# -r-with-arg and long flags before its publish subcommands. Nothing else
+# widens: a gap exists only where a bypass was verified, and the read-only
+# siblings with the same gap (git -C pull/log, gh -R pr view, git stash
+# push) are pinned silent in the suite.
+ggap='( +-c +[^ ]+| +--[a-z][a-z0-9-]*(=[^ ]*)?)*'
+hgap='( +-r +[^ ]+| +--[a-z][a-z0-9-]*(=[^ ]*)?)*'
+armre="(^|[^a-z0-9_-])(git$ggap push|gh$hgap pr (create|merge)|gh$hgap release create|npm publish|docker push|terraform apply|kubectl apply|gh$hgap repo create|twine upload|(poetry|cargo|uv) publish)([^a-z0-9-]|\$)"
 printf '%s' "$lc" | grep -Eq "$armre" || exit 0
 verb="$(printf '%s' "$lc" | grep -Eo "$armre" | head -1 | sed 's/^[^a-z]*//; s/[^a-z]*$//')"
 
@@ -79,6 +90,44 @@ if [ -f "$rp" ] && [ ! -L "$rp" ]; then
     case "$mt" in ''|*[!0-9]*) mt=0 ;; esac
     if [ $(( now - mt )) -le 3600 ]; then log "PASS-receipt"; exit 0; fi
   fi
+fi
+
+# The destructive/production tier (D-69): infra applies, docker push, and
+# the registry publishes do not take the one-bounce override — an identical
+# retry alone never passes. This tier takes a one-shot GRANT the owner
+# writes: .superstack/outward-grant, a regular file (a symlink never
+# vouches) whose last line reads `grant: <text>` with <text> non-empty and
+# contained in the command. The grant is EVIDENCE OF THE OWNER'S
+# AUTHORIZATION, never access control: one file-write the owner can always
+# make, consumed by its one use (moved to outward-grant-consumed), logged
+# either way. The sweep-receipt pass above is untouched for every tier, and
+# everything below this block keeps the one-bounce charter. git push and
+# the gh verbs stay one-bounce on purpose: grants on everyday publishes are
+# on the refused list, and gh release create is deletable — the boundary is
+# irreversibility, not outwardness.
+t3re='(terraform apply|kubectl apply|docker push|npm publish|twine upload|(poetry|cargo|uv) publish)'
+if printf '%s' "$verb" | grep -Eq "$t3re"; then
+  gp="$sdir/outward-grant"
+  if [ -f "$gp" ] && [ ! -L "$gp" ]; then
+    gtext="$(tail -n 1 "$gp" 2>/dev/null | sed -n 's/^grant: *//p' | sed 's/ *$//' | tr '[:upper:]' '[:lower:]')"
+    if [ -n "$gtext" ]; then
+      case "$lc" in *"$gtext"*)
+        mv "$gp" "$sdir/outward-grant-consumed" 2>/dev/null || log "GRANT-consume-failed"
+        log "PASS-grant"
+        exit 0;;
+      esac
+    fi
+  fi
+  log "BOUNCE-t3"
+  cat >&2 <<EOF
+superstack outward gate: this command is in the destructive/production tier ($verb) and no fresh go-public sweep receipt exists. An identical retry will NOT pass for this tier. Do ONE:
+- Have the owner write the one-shot grant, then retry the identical command:
+    printf 'grant: $verb\n' > .superstack/outward-grant
+  The grant is evidence of the owner's authorization, never access control; it is consumed by one use and logged.
+- Or run the full sweep — invoke superstack-outward — then append its receipt line (grammar ends in "findings: <n fixed / none>") to .superstack/outward-pass and retry.
+(Knob: SUPERSTACK_GATES=all|claims|off — claims or off silences this gate.)
+EOF
+  exit 2
 fi
 
 # One bounce per exact command: a repeat passes.

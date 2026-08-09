@@ -7,8 +7,8 @@
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-1f6feb?style=flat-square" alt="License: MIT">
-  <img src="https://img.shields.io/badge/version-1.1.0-8250df?style=flat-square" alt="Version 1.1.0">
-  <img src="https://img.shields.io/badge/tests-23%20suites-3fb950?style=flat-square" alt="Tests: 23 suites">
+  <img src="https://img.shields.io/badge/version-2.0.0-8250df?style=flat-square" alt="Version 2.0.0">
+  <img src="https://img.shields.io/badge/tests-25%20suites-3fb950?style=flat-square" alt="Tests: 25 suites">
   <img src="https://img.shields.io/badge/routing%20eval-24%2F25-d29922?style=flat-square" alt="Routing eval: 24 of 25">
 </p>
 
@@ -37,7 +37,16 @@ If you run long work through a coding agent, you have met the problems it works 
 
 And a long tail of the same problem at every other stage of delivery: shaping a raw idea, scoping, debugging, reviewing, verifying, shipping, a live incident, a risky upgrade, the report afterwards. Each of those moments has [a specialist on the bench](#the-specialist-bench): `superstack-inception` turns a raw idea into something buildable, the kernel's `scope · debug · review · verify · ship` runners own the everyday build loop, `superstack-execute` carries a build across many sessions, `superstack-incident` drops everything to mitigate when production is down, `superstack-doctrine` turns your corrections into standing rules. And when your field needs specialists the roster doesn't ship (a data analyst's pack, an infrastructure pack, a frontend reviewer's pack), `superstack-smith` is the admission gate for building your own.
 
-What superstack does about them: the goal and the stopping point ride in files on disk, written while the work happens, so a session that starts cold or survives a compaction reads where things stand instead of trusting a handoff summary. Corrections become standing rules, read back until you lift them, and a one-hour bug fix gets the same treatment as a campaign. Plans stay light on purpose: the goal, each milestone's done-when, and your rulings, and the rest is left to a model that builds better adapting on the fly than following a step list written on day one; for serious work, a costlier build that lands right the first time beats a week of patched iterations.
+## The whole product in four ideas
+
+Everything superstack does exists to keep four things true on disk, where the next session can read them:
+
+- **Your goal.** What the work is for and exactly where it stopped ride in a plan file, written while the work happens, so a cold start or a compaction reads the goal back instead of guessing it. Plans stay light on purpose (the goal, each milestone's done-when, and your rulings) because a capable model builds better adapting on the fly than following a step list written on day one.
+- **Your state.** The workspace grows a plain-text record (`.superstack/`) as a side effect of working: in-flight tasks, campaigns, parked ideas, predictions, walkthrough history. No handoff files to write, no session summaries to trust.
+- **Your rules.** A correction you give once becomes standing doctrine, read back at every session start and binding until you lift it: Tuesday's "never touch that table" still holds on Thursday, in every session, after every compaction.
+- **Your evidence.** A "done" carries proof or it bounces. Receipts record checks that actually ran, expire by themselves the moment the code under them changes, and a campaign cannot claim a milestone closed without its receipt current.
+
+The rest of this page is the machinery that keeps those four true: [a deterministic spine](#the-deterministic-spine) of shell hooks that fire whether or not a skill loads, and [a bench of specialists](#the-specialist-bench) for each stage of the work.
 
 ## Install
 
@@ -83,13 +92,13 @@ Method plugins usually answer these pains with skill text: good advice the model
 Six shell hooks run no matter what the model loads or forgets:
 
 - **A prompt-time door.** A raw idea in an unshaped workspace gets one offered question: shape it first, or build straight away. Honored either way, silently.
-- **The claims gate.** A turn that changed things cannot end on a bare "done"; bounced once until the claim carries its `Verified:` / `Assumed:` / `PROVISIONAL` ledger.
+- **The claims gate.** A turn that changed things cannot end on a bare "done"; bounced once until the claim carries its `Verified:` / `Assumed:` / `PROVISIONAL` ledger, or until it cites a receipt, which vouches only while it is fresh: a receipt bound to files expires by itself the moment a covered file changes, and one recording a failing run never vouches. A claim of a closed campaign or milestone is stricter: it passes only on a current receipt, never on wording.
 - **The look gate.** Change a file with a face (`.html`, `.tsx`, `.css`, and so on), claim done on logic-only evidence, and it asks once whether anybody actually looked.
 - **The publish gate.** `git push`, `gh pr create`/`merge`, releases, `npm publish`, `docker push`, and `terraform`/`kubectl apply` are held until a fresh sweep receipt exists. The sweep checks the outgoing delta for secrets (fail-closed), AI-authorship traces, confidential terms, and stale public claims; receipts expire after an hour.
 - **The session-start voice.** The goal, standing law, open questions, and parked work under a single line budget. The goal composes first and survives longest; when the budget forces a drop, the drop is announced, never silent.
 - **The compaction carrier.** The plan's goal and frontier survive compaction, sanitized on the way through.
 
-Every gate bounces once, logs, and lets an identical retry through. That is deliberate: a gate that can trap a session is a worse failure than one you can override, so the override is always available and always lands in the log where you can see it. The gates put calibration pressure on the model's claims; they are not access control, and `SUPERSTACK_GATES=off` silences all of them.
+Every gate bounces once and logs, and outside the destructive publish tier an identical retry passes. That is deliberate: a gate that can trap a session is a worse failure than one you can override, so an override is always available and always lands in the log where you can see it. The destructive tier of the publish gate asks for one thing more: for `terraform`/`kubectl apply`, `docker push`, and the package-registry publishes, you approve the retry by writing a one-line grant file (`printf 'grant: npm publish\n' > .superstack/outward-grant`); the gate consumes the grant on use and logs it. The grant records your authorization. It is not access control, none of the gates are, and `SUPERSTACK_GATES=off` silences all of them.
 
 ```mermaid
 graph LR
@@ -146,7 +155,7 @@ Eighteen lifecycle modules around it, by the moment they serve:
 
 **Keeping long work on course**
 
-- `superstack-execute`: milestone campaigns with crash-safe bookkeeping; progress is stamped after each step, so a dead session is detected by its missing stamp, and audits close milestones cold
+- `superstack-execute`: milestone campaigns with crash-safe bookkeeping; progress is stamped after each step, so a dead session is detected by its missing stamp, audits close milestones cold, and a closure claim needs its receipt current
 - `superstack-continuity`: safe resume, with ground truth re-verified and inherited state distrusted
 - `superstack-doctrine`: corrections kept verbatim, scoped, and binding until you lift them
 - `superstack-queue`: parked ideas with revisit triggers
@@ -179,17 +188,17 @@ The paper trail builds up as a side effect of the work; nobody has to remember t
 
 ```text
 .superstack/                   git-ignored; rides the checkout, never your commits
-├── project.md                 the overlay: your acceptance oracle, conventions, gotchas
-├── tasks/  plans/             in-flight work and campaigns, each carrying its goal line
-├── doctrine.md                your corrections, verbatim, with scope and supersession
-├── claims-log  gate-log  residuals.md   the calibration record behind done-claims
-├── queue.md  value-log  toured.md       parked ideas, predictions, walkthrough history
-└── receipts/  outward-pass    check outputs with commands and repo revisions; sweep receipts
+├── project.md                 your state: the overlay: acceptance oracle, conventions, gotchas
+├── tasks/  plans/             your goal: in-flight work and campaigns, each carrying its goal line
+├── doctrine.md  domain.md     your rules: corrections verbatim; the glossary you've acked as house language
+├── claims-log  gate-log  residuals.md   your evidence: the calibration record behind done-claims
+├── queue.md  value-log  toured.md       your state: parked ideas, predictions, walkthrough history
+└── receipts/  outward-pass    your evidence: check runs with commands and revisions; sweep receipts
 ```
 
 One deliberate exception: `superstack-decide` offers (never silently creates) a committed `docs/decisions/` directory, because decision records must survive machines and teammates.
 
-**Local and inspectable.** The hooks are plain shell on your machine and call no network service; read them in [`hooks/`](hooks/), where the test suites live beside them. Installing and uninstalling touches nothing of yours except one `.superstack/` ignore rule. The routing eval, with its method and recorded run, is in [`eval/routing/`](eval/routing/) if you want to check the claims.
+**Local and inspectable.** The hooks are plain shell on your machine and call no network service; read them in [`hooks/`](hooks/), where the test suites live beside them. Installing and uninstalling touches nothing of yours except one `.superstack/` ignore rule. The routing eval, with its method and recorded run, is in [`eval/routing/`](eval/routing/), and the survival scenarios (a compaction, a session death, a stale receipt, a fabricated claim, each proven caught by a check you can read, with the baseline numbers and the recorded misses beside them) are in [`eval/scenarios/`](eval/scenarios/).
 
 **Uninstall:** `/plugin uninstall superstack@superstack`. Your `.superstack/` directories and the ignore rule stay where they are; they're your files.
 

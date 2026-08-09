@@ -30,11 +30,11 @@ Generate topics from three sources: "the day this exists, what will it be judged
 ```
 <!-- task: <slug> — goal: <what this is for> — next: <current open topic as of the last flush> -->
 ## sheet
-- T<n> [face] <topic> — regret:<high|med|low> cost:<baked|loose> status:<open|grounded|assumed> — unknowns: <a; b> — enough-when: <what closes it> — evidence: <user words | reaction | comparable | expert rationale>
+- T<n> [face] <topic> — regret:<high|med|low> cost:<baked|loose> from:<owner|model|rival|reaction> status:<open|grounded|assumed> — unknowns: <a; b> — enough-when: <what closes it> — evidence: <user words | reaction | comparable | expert rationale>
 - T<n> receipt: <artifact path> — reaction: "<the user's words>"
 ```
 
-`[face]` marks topics whose output is experienced (UI, page, chart, document, CLI output). A face topic's `status` may not leave `open` without its receipt line — the look gate checks this mechanically. Show the user a 3–7 topic first tranche in plain language (one stake sentence and cost-to-change each); the full merged sheet stays durable. The tranche announcement says the walk's plan out loud: the order, and where each [face] pick lands and why it is not a question ("the look arrives as two rendered pages once real data exists to render them on"). An unspoken deferral reads as an omission.
+`[face]` marks topics whose output is experienced (UI, page, chart, document, CLI output). A face topic's `status` may not leave `open` without its receipt line — the look gate checks this mechanically. The `from:` token records who minted each topic — the owner's ask, this skill's cast, the rival's cold sheet, or a reaction — so the close can see whose sheet was actually walked rather than assume it was the owner's. Show the user a 3–7 topic first tranche in plain language (one stake sentence and cost-to-change each); the full merged sheet stays durable. The tranche announcement says the walk's plan out loud: the order, and where each [face] pick lands and why it is not a question ("the look arrives as two rendered pages once real data exists to render them on"). An unspoken deferral reads as an omission.
 
 ## 4. The decision brief
 

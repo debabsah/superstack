@@ -73,6 +73,53 @@ out="$( cd "$tmp/min" && bash "$doctor" 2>&1 )"; ec=$?
 if [ "$ec" -eq 0 ]; then pass=$((pass+1)); echo "PASS: exit 0 on minimal state"
 else fail=$((fail+1)); echo "FAIL: exit $ec on minimal state"; fi
 
+# -- D-70: degradation visibility -------------------------------------------
+# The silent-dark classes must be REPORTED, not skipped: a plan the carriers
+# cannot parse, a missing jq (the outward gate fails open without it), hooks
+# that have never fired in a workspace with real work, and an off switch set
+# in this very environment. Each fixture is doctored to one failure; the
+# healthy record above must stay free of every degradation line.
+dg="$tmp/dg"; git init -q -b main "$dg"; sdg="$dg/.superstack"; mkdir -p "$sdg/plans"
+printf '%s\n' '<!-- pointer: p — oracle: o -->' > "$sdg/project.md"
+printf 'garbage first line, no grammar\ngoal: g\n' > "$sdg/plans/broken.md"
+printf -- '<!-- plan: ok status: CLOSED 2026-08-01 -->\n' > "$sdg/plans/closed.md"
+out="$( cd "$dg" && bash "$doctor" 2>&1 )"
+check "present-but-unparseable plan is REPORTED, not skipped" "broken.md UNPARSEABLE" "$out"
+check "the unparseable report names the ambient consequence" "ambient-dark" "$out"
+if printf '%s' "$out" | grep -q 'closed.md UNPARSEABLE'; then fail=$((fail+1)); echo "FAIL: parseable CLOSED plan misreported as unparseable"
+else pass=$((pass+1)); echo "PASS: parseable CLOSED plan not misreported"; fi
+out="$( cd "$dg" && SUPERSTACK_JQ=definitely-not-a-binary bash "$doctor" 2>&1 )"
+check "missing jq is reported"                       "jq MISSING" "$out"
+check "the jq report names the dark gate"            "unswept" "$out"
+out="$( cd "$dg" && bash "$doctor" 2>&1 )"
+if printf '%s' "$out" | grep -q 'jq MISSING'; then fail=$((fail+1)); echo "FAIL: jq degradation reported while jq is present"
+else pass=$((pass+1)); echo "PASS: no jq degradation line while jq is present"; fi
+out="$( cd "$dg" && SUPERSTACK_GATES=off bash "$doctor" 2>&1 )"
+check "SUPERSTACK_GATES=off in the environment is reported" "SUPERSTACK_GATES=off" "$out"
+out="$( cd "$dg" && bash "$doctor" 2>&1 )"
+if printf '%s' "$out" | grep -q 'SUPERSTACK_GATES='; then fail=$((fail+1)); echo "FAIL: gates-env line shown with the switch unset"
+else pass=$((pass+1)); echo "PASS: gates-env line silent when unset"; fi
+hl="$tmp/hl"; git init -q -b main "$hl"; shl="$hl/.superstack"; mkdir -p "$shl"
+printf '%s\n' '<!-- pointer: p — oracle: o -->' > "$shl/project.md"
+printf '2026-08-01 · a claim · its evidence\n' > "$shl/claims-log"
+out="$( cd "$hl" && bash "$doctor" 2>&1 )"
+check "work with no hook trace ever is reported"     "no gate, outward, or load line" "$out"
+out="$( cd "$tmp/min" && bash "$doctor" 2>&1 )"
+if printf '%s' "$out" | grep -q 'no gate, outward, or load line'; then fail=$((fail+1)); echo "FAIL: fresh record flagged as hooks-dark"
+else pass=$((pass+1)); echo "PASS: fresh record not flagged as hooks-dark"; fi
+out="$( cd "$tmp/full" && bash "$doctor" 2>&1 )"
+if printf '%s' "$out" | grep -q 'no gate, outward, or load line'; then fail=$((fail+1)); echo "FAIL: record with hook traces flagged as hooks-dark"
+else pass=$((pass+1)); echo "PASS: record with hook traces not flagged"; fi
+
+# -- D-70: domain language and review-yield read-outs ------------------------
+printf -- '- frontier: the plan edge [ack: 2026-08-01]\n- vibe: an unratified term\n- old: gone [ack: 2026-01-01] [expires: 2026-02-01]\n' > "$sdg/domain.md"
+printf -- '2026-08-01 · gate rework · lenses:2 · findings:3 · fix-now:1 · deferred:1 · rejected:1\n' > "$sdg/review-yield"
+out="$( cd "$dg" && bash "$doctor" 2>&1 )"
+check "domain terms counted"                         "domain: 1 term" "$out"
+check "unacked entries counted as proposals"         "1 proposal" "$out"
+check "expired entries counted apart"                "1 expired" "$out"
+check "review-yield rows reported"                   "review-yield: 1 row" "$out"
+
 echo
 if [ "$fail" -eq 0 ]; then echo "all checks pass ($pass)"; exit 0
 else echo "$fail check(s) FAILED ($pass passed)"; exit 1; fi

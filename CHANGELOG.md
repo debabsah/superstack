@@ -1,5 +1,68 @@
 # Changelog
 
+## 2.0.0 (2026-08-09)
+
+Evidence that maintains itself, closures that need their artifacts, a
+publish tier that waits for you, and the whole product told as four
+ideas: your goal, your state, your rules, your evidence.
+
+The behavior change that earns the major number: the destructive tier
+of the publish gate (`terraform`/`kubectl apply`, `docker push`, and
+the package-registry publishes) no longer passes on an identical retry
+alone. It waits for a one-line grant file you write, consumed on use
+and logged. Everyday pushes and PR verbs keep the one-bounce charter
+unchanged. The grant records your authorization; it is not access
+control.
+
+- **Receipts expire by themselves**: `scripts/superstack-mint.sh` runs
+  the named check itself and writes the receipt from what it observed:
+  command, exit, output tail, revision, covered files, and a
+  working-state signature, so receipt content is never prose from
+  memory. The claims gate stales a files-bound receipt the moment a
+  covered file changes, committed or not, leaves it current across
+  unrelated commits, and refuses a receipt that records a failing run.
+  Hand-written receipts without a files binding keep the previous
+  head-matching behavior exactly.
+- **Closures need artifacts**: a claim that a campaign or milestone is
+  closed passes only through a cited receipt that exists, is fresh, and
+  records a passing run. Ledger wording alone bounces, with its own
+  audit row and a message that teaches the minting command.
+- **The publish gate closes its verified bypass**: a flag between the
+  binary and the verb (`git -C <clone> push`, `gh -R <repo> pr merge`)
+  no longer slips past the pattern; every read-only sibling with the
+  same shape is pinned silent in the suite.
+- **The doctor reports silent darkness**: a missing `jq` (which
+  silently disarms the publish gate and the prompt door), a plan file
+  the continuity carriers cannot parse (a present-but-dark campaign), a
+  workspace with real work but no hook line ever landed, and an off
+  switch set in the environment. Each is reported with its consequence,
+  and healthy records pinned silent.
+- **The eval lab ships in `eval/scenarios/`**: five deterministic
+  scenario suites (compaction carry, session death, evidence
+  staleness, claim attacks with honest-report controls, and ceremony
+  cost) with recorded baselines in `RESULTS.md`. Recovery scenarios
+  are pinned invariants; measurement scenarios record their misses as
+  numbered data. Known limit, stated plainly: the model-arm input-token
+  and cost columns are provisional until the usage parse reads the
+  cache fields; the output-token and duration columns are trustworthy.
+- **A domain glossary with its defenses coded**: `.superstack/domain.md`
+  holds terms, never specs; entries without your `[ack: date]` stamp
+  are proposals and never surface at session start, expired entries
+  drop, and the ambient line carries a count and a pointer, never term
+  content.
+- **Smaller sharpenings**: the debug skill opens with its front gate
+  (the red comes first; a theory before the red is not debugging);
+  review panels append a yield row so a configuration that keeps
+  finding nothing accumulates the case to shrink it; inception sheet
+  topics record who minted them (`from:` owner, model, rival, or
+  reaction); a waiver is recorded as `WAIVED:` with the owner's words
+  and is never upgraded into `Verified:` by a later report; the
+  session voice's unknown-state fallbacks now name the defect and the
+  cure instead of shrugging.
+- **The story rework**: the README tells the whole product through the
+  four ideas above, with the survival scenarios linked beside the
+  routing eval so the claims stay checkable.
+
 ## 1.1.0 (2026-08-08)
 
 Campaign-shaped work now routes end to end, a receipt can carry the

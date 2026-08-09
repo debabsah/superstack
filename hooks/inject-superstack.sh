@@ -46,7 +46,7 @@ if [ -d "$pd" ]; then
     slug="$(head -1 "$pf" | sed -n 's/.*plan: \([a-z0-9-]*\).*/\1/p')"
     goal="$(grep -m1 '^goal:' "$pf" 2>/dev/null | sed -E 's/^goal: *//' | cut -c1-120 | tr -d '[:cntrl:]')"
     fr="$(grep -m1 '^frontier:' "$pf" 2>/dev/null | cut -c1-160 | tr -d '[:cntrl:]')"
-    append "superstack execute: plan ${slug:-unnamed} ACTIVE — goal: ${goal:-not recorded — add a goal: line to the plan header} — ${fr:-frontier unknown} — superstack-execute is required reading before any build action."
+    append "superstack execute: plan ${slug:-unnamed} ACTIVE — goal: ${goal:-not recorded — add a goal: line to the plan header} — ${fr:-frontier unreadable — add a frontier: line to the plan} — superstack-execute is required reading before any build action."
     break
   done
 fi
@@ -122,8 +122,19 @@ if [ -f "$qf" ]; then
   if [ -n "$openq" ]; then
     qn="$(printf '%s\n' "$openq" | wc -l | tr -d ' ')"
     oldest="$(printf '%s\n' "$openq" | head -1 | sed -n 's/^- Q[0-9]* (\([0-9-]*\)).*/\1/p')"
-    append "superstack queue: $qn parked item(s), oldest ${oldest:-unknown} — read before starting fresh work (.superstack/queue.md)."
+    append "superstack queue: $qn parked item(s), oldest ${oldest:-undated — a queue row is missing its (YYYY-MM-DD)} — read before starting fresh work (.superstack/queue.md)."
   fi
+fi
+
+# Domain language (D-70): glossary only, defenses coded — an entry without
+# an owner [ack: date] is a proposal and never surfaces here, an [expires:]
+# date in the past drops one, and the line carries count plus pointer, never
+# term content, so the ambient voice cannot turn the glossary into a spec.
+dmf="$root/.superstack/domain.md"
+if [ -f "$dmf" ]; then
+  dtoday="$(date +%Y-%m-%d)"
+  dlive="$(grep '^- ' "$dmf" 2>/dev/null | grep '\[ack: ' | awk -v t="$dtoday" '{ if (match($0, /\[expires: *[0-9-]+\]/)) { d = substr($0, RSTART + 10, 10); gsub(/[^0-9-]/, "", d); if (d <= t) next } print }' | wc -l | tr -d ' ')"
+  [ "${dlive:-0}" -gt 0 ] && append "superstack domain: $dlive term(s) ack'd — .superstack/domain.md is the glossary (entries without an owner ack are proposals)."
 fi
 
 # Task lines land LAST (S2): the goal says what the work is FOR; where each

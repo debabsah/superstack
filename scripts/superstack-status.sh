@@ -21,6 +21,17 @@ fi
 
 echo "superstack-status — $root/.superstack$nogit"
 
+# Degradation visibility (D-70): the silent-dark classes are REPORTED here,
+# never left indistinguishable from health. Without jq the outward publish
+# gate and the prompt front door both fail open — publishes go unswept and
+# the workspace merely looks quiet. SUPERSTACK_JQ is the test seam (the
+# LAB_HOOKS precedent). The off switch is reported when set in THIS
+# environment, because a silenced gate looks identical to a passing one.
+command -v "${SUPERSTACK_JQ:-jq}" >/dev/null 2>&1 || echo "degradation: jq MISSING — publishes go unswept (the outward gate fails open without it) and the prompt front door is quiet"
+case "${SUPERSTACK_GATES:-}" in
+  off|claims) echo "degradation: SUPERSTACK_GATES=${SUPERSTACK_GATES} in this environment (off silences every gate; claims keeps only the claims gate)";;
+esac
+
 # Overlay: pointer, oracle rows, stale rows (last-confirmed date > ~90 days old).
 if [ -f "$f/project.md" ]; then
   pointer="$(sed -n 's/.*<!-- *pointer: *\(.*\) -->.*/\1/p' "$f/project.md" | head -n 1)"
@@ -115,8 +126,17 @@ fi
 if [ -d "$f/plans" ]; then
   for pf in "$f/plans"/*.md; do
     [ -f "$pf" ] || continue
-    head -1 "$pf" 2>/dev/null | grep -q 'status: ACTIVE' || continue
-    slug="$(head -1 "$pf" | sed -n 's/.*plan: \([a-z0-9-]*\).*/\1/p')"
+    l1="$(head -1 "$pf" 2>/dev/null)"
+    # A plan whose line 1 fails the grammar is invisible to every continuity
+    # carrier (session voice, pre-compact, this doctor's ACTIVE loop) — a
+    # present-but-dark campaign, indistinguishable from absent everywhere
+    # but here (D-70; the Q40 class). Report it, never skip it.
+    if ! printf '%s' "$l1" | grep -q '<!-- *plan:.*status:'; then
+      echo "plan: $(basename "$pf") UNPARSEABLE line 1 — the continuity carriers skip it (ambient-dark); expected: <!-- plan: <slug> status: ... -->"
+      continue
+    fi
+    printf '%s' "$l1" | grep -q 'status: ACTIVE' || continue
+    slug="$(printf '%s' "$l1" | sed -n 's/.*plan: \([a-z0-9-]*\).*/\1/p')"
     fr="$(grep -m1 '^frontier:' "$pf" 2>/dev/null | cut -c1-120 | tr -d '[:cntrl:]')"
     echo "plan: ${slug:-unnamed} ACTIVE — ${fr:-no frontier stamp}"
   done
@@ -135,7 +155,7 @@ if [ -f "$f/queue.md" ]; then
   if [ -n "$openq" ]; then
     qn="$(printf '%s\n' "$openq" | grep -c '^- Q')"
     oldest="$(printf '%s\n' "$openq" | head -1 | sed -n 's/^- Q[0-9]* (\([0-9-]*\)).*/\1/p')"
-    echo "queue: $qn open parked item(s) (oldest open: ${oldest:-unknown})"
+    echo "queue: $qn open parked item(s) (oldest open: ${oldest:-undated — a queue row is missing its (YYYY-MM-DD)})"
   else
     echo "queue: 0 open parked item(s)"
   fi
@@ -150,6 +170,25 @@ fi
 
 if [ -f "$f/toured.md" ]; then
   echo "toured: $(grep -c '^- ' "$f/toured.md" 2>/dev/null) tour(s) recorded"
+fi
+
+# Domain language (D-70): glossary only. An entry without an owner
+# [ack: date] is a proposal; an [expires:] date in the past demotes one.
+# Count grammar mirrors hooks/inject-superstack.sh (R2: two callers).
+if [ -f "$f/domain.md" ]; then
+  dtoday="$(date +%F)"
+  dtot=$(grep -c '^- ' "$f/domain.md" 2>/dev/null)
+  dprop=$(grep '^- ' "$f/domain.md" 2>/dev/null | grep -vc '\[ack: ')
+  dexp=$(grep '^- ' "$f/domain.md" 2>/dev/null | grep '\[ack: ' | sed -n 's/.*\[expires: *\([0-9-]*\)\].*/\1/p' | awk -v t="$dtoday" '$0 != "" && $0 <= t' | wc -l | tr -d ' ')
+  dack=$((dtot - dprop - dexp))
+  echo "domain: $dack term(s) ack'd, $dprop proposal(s), $dexp expired (glossary only — unacked entries are proposals, never house language)"
+fi
+
+# Review yield (D-70): one row per review panel; the record that shows
+# whether a review configuration earns its cost.
+if [ -f "$f/review-yield" ]; then
+  ry=$(grep -cE '^20[0-9]{2}-[0-9]{2}-[0-9]{2} · ' "$f/review-yield" 2>/dev/null)
+  echo "review-yield: $ry row(s) (a configuration whose rows stay at zero findings is the recorded shrink signal)"
 fi
 
 if [ -f "$f/skipped-gates.md" ]; then
@@ -168,5 +207,19 @@ fi
 if [ -d "$f/receipts" ]; then
   rn=$(find "$f/receipts" -type f 2>/dev/null | wc -l | tr -d ' ')
   echo "receipts: $rn file(s) (emitted/attested, plus load and delegation logs)"
+fi
+
+# Hook liveness (D-70): a workspace with real work whose record shows no
+# hook line EVER is probably running without the hooks — a state invisible
+# from inside a session, which is why the read-only doctor is the one to
+# say it. Work evidence: a claims-log, a plan, or a task file. Hook
+# evidence: any gate-log, outward-log, or load receipt. A fresh record has
+# neither and stays silent.
+work=""
+[ -f "$f/claims-log" ] && work=1
+[ -z "$work" ] && [ -n "$(find "$f/plans" -name '*.md' 2>/dev/null | head -1)" ] && work=1
+[ -z "$work" ] && [ -n "$(find "$f/tasks" -name '*.md' 2>/dev/null | head -1)" ] && work=1
+if [ -n "$work" ] && [ ! -f "$f/gate-log" ] && [ ! -f "$f/outward-log" ] && [ ! -f "$f/receipts/loads.log" ]; then
+  echo "degradation: no gate, outward, or load line has ever landed here — if sessions run in this workspace the hooks may not be firing (plugin off, or SUPERSTACK_GATES silencing them)"
 fi
 exit 0

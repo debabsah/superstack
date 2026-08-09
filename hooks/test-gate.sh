@@ -449,7 +449,7 @@ check "message quoting stop_hook_active cannot bypass" 2 "$(run false "Done. It 
 check "message quoting transcript_path cannot bypass"  2 "$(run false "Done. It reads \\\"transcript_path\\\": \\\"/nope\\\" first.")"
 
 # the arming window must cover the whole turn, not just its last 600 lines.
-The escape was correlated with the risk: long tool-heavy turns that
+# The escape was correlated with the risk: long tool-heavy turns that
 # edit early and claim at the end were the only ones silently skipping the gate.
 mk_long 700
 check "long turn still arms (edit outside the 600-line window)" 2 "$(run false "$claim")"
@@ -486,7 +486,7 @@ run false "$calibrated" >/dev/null
 # Fixture uses the real grammar (project-template.md: one `- ` bullet per open
 # obligation) and the real header, which itself names both tokens. A fixture
 # without the header was green fiction — both counters reported +1 forever.
-The prose line pins the other half: mentioning a token is not owing one.
+# The prose line pins the other half: mentioning a token is not owing one.
 printf '%s\n' '# Residuals — undischarged Assumed:/PROVISIONAL (superstack-verify discharges; SessionStart surfaces the count)' > "$tmp/.superstack/residuals.md"
 printf '%s\n' '- 2026-01-01 (0.1.0) Assumed: staging matches prod - could not check - discharge: diff the configs' >> "$tmp/.superstack/residuals.md"
 printf '%s\n' 'Prose about how an Assumed: line gets discharged should not be counted as one.' >> "$tmp/.superstack/residuals.md"
@@ -611,6 +611,81 @@ check "question-form claim still exits quietly" 0 "$(run_in "$fp" false "Should 
 grep -q "SUPPRESS" "$fp/.superstack/gate-log" 2>/dev/null; check "suppressor exit leaves its SUPPRESS row" 0 "$?"
 check "mixed honest report still exits quietly" 0 "$(run_in "$fp" false "Fixed the parser, but the build is still failing.")"
 grep -q "MIXED" "$fp/.superstack/gate-log" 2>/dev/null; check "mixed exit leaves its MIXED row" 0 "$?"
+# D-66: files-bound receipts. A receipt carrying files:/filesig: binds to the
+# SURFACE it covers, not to the head: an unrelated commit must not stale it
+# (the false-stale direction), a covered change — committed or dirty — must
+# (the missed-stale direction), and a receipt recording a failing check never
+# vouches whatever its freshness. Receipts without a files: line keep the
+# legacy head-substring behavior pinned above. The signature recipe here must
+# match the minter's; the minted-receipt rows below are that pairing's pin.
+fb="$tmp/fbrepo"
+git init -q -b main "$fb"
+( cd "$fb" && printf 'v1\n' > covered.txt && printf 'x\n' > other.txt && git add . && git -c user.email=t@t -c user.name=t commit -qm one )
+mkdir -p "$fb/.superstack/receipts"
+fbrev="$(git -C "$fb" rev-parse --short HEAD)"
+fbsig="$( (cd "$fb" && git diff HEAD -- covered.txt; git status --porcelain -- covered.txt) | cksum | cut -d' ' -f1)"
+printf 'command: check\nexit: 0\nrevision: %s\nfiles: covered.txt\nfilesig: %s\n' "$fbrev" "$fbsig" > "$fb/.superstack/receipts/emitted-fb"
+mk "$user" "$edit" "$claimtxt"
+check "files-bound current receipt fast-passes"                    0 "$(run_in "$fb" false "Done. receipt: receipts/emitted-fb")"
+( cd "$fb" && printf 'y\n' >> other.txt && git add other.txt && git -c user.email=t@t -c user.name=t commit -qm unrelated )
+check "an unrelated commit does not stale a files-bound receipt"   0 "$(run_in "$fb" false "Done. receipt: receipts/emitted-fb")"
+printf 'dirty\n' >> "$fb/covered.txt"
+check "a dirty covered file stales a files-bound receipt"          2 "$(run_in "$fb" false "Done. receipt: receipts/emitted-fb")"
+grep -q "FASTSTALE.*emitted-fb" "$fb/.superstack/gate-log" 2>/dev/null; check "the dirty-covered stale leaves its row" 0 "$?"
+( cd "$fb" && git checkout -q -- covered.txt )
+printf 'dirty\n' >> "$fb/other.txt"
+check "a dirty UNcovered file does not stale it (false-stale guard)" 0 "$(run_in "$fb" false "Done. receipt: receipts/emitted-fb")"
+( cd "$fb" && git checkout -q -- other.txt )
+( cd "$fb" && printf 'v2\n' > covered.txt && git add covered.txt && git -c user.email=t@t -c user.name=t commit -qm covered-moved )
+check "a committed covered change stales a files-bound receipt"    2 "$(run_in "$fb" false "Done. receipt: receipts/emitted-fb")"
+printf 'command: check\nexit: 3\nrevision: %s\nfiles: covered.txt\n' "$(git -C "$fb" rev-parse --short HEAD)" > "$fb/.superstack/receipts/emitted-redrun"
+check "a receipt recording a failing check never vouches"          2 "$(run_in "$fb" false "Done. receipt: receipts/emitted-redrun")"
+grep -q "FASTRED" "$fb/.superstack/gate-log" 2>/dev/null; check "the failing-check refusal leaves its FASTRED row" 0 "$?"
+if [ -f "$here/../scripts/superstack-mint.sh" ]; then
+  ( cd "$fb" && bash "$here/../scripts/superstack-mint.sh" --receipt emitted-minted --files covered.txt -- true ) >/dev/null 2>&1
+  check "a minter-written receipt fast-passes (recipes agree)"     0 "$(run_in "$fb" false "Done. receipt: receipts/emitted-minted")"
+  printf 'dirty\n' >> "$fb/covered.txt"
+  check "editing a covered file stales the minted receipt"         2 "$(run_in "$fb" false "Done. receipt: receipts/emitted-minted")"
+else
+  check "minter present for the integration rows" 0 "1"
+fi
+rm -rf "$fb"
+
+# D-67: a campaign closure or milestone pass is receipts, not prose. A
+# closure claim matches no claim stem, so it gets its own arm beside the
+# frozen grammar — and unlike an ordinary done-claim, ledger wording never
+# substitutes for the artifact: on a mutating turn a closure passes ONLY
+# through the receipt fast path (cited, existing, fresh, passing run).
+# Negated closures, questions, non-mutating turns, and bare-"closed" prose
+# all stay silent — the arm is narrow and the cost of a false arm is one
+# bounce demand, same price as everywhere else in this file.
+cb="$tmp/cbrepo"
+git init -q -b main "$cb"
+( cd "$cb" && printf 'v1\n' > covered.txt && git add . && git -c user.email=t@t -c user.name=t commit -qm one )
+mkdir -p "$cb/.superstack/receipts"
+cbrev="$(git -C "$cb" rev-parse --short HEAD)"
+cbsig="$( (cd "$cb" && git diff HEAD -- covered.txt; git status --porcelain -- covered.txt) | cksum | cut -d' ' -f1)"
+printf 'command: check\nexit: 0\nrevision: %s\nfiles: covered.txt\nfilesig: %s\n' "$cbrev" "$cbsig" > "$cb/.superstack/receipts/emitted-cb"
+mk "$user" "$edit" "$claimtxt"
+check "a closure claim with no artifact cited bounces"             2 "$(run_in "$cb" false "M9 CLOSED on a light pass.")"
+grep -q "CLOSEBOUNCE" "$cb/.superstack/gate-log" 2>/dev/null; check "the closure bounce leaves its CLOSEBOUNCE row" 0 "$?"
+check "a closure citing a missing receipt bounces"                 2 "$(run_in "$cb" false "M9 CLOSED. receipt: receipts/emitted-gone")"
+check "closure wording never substitutes for the artifact"         2 "$(run_in "$cb" false "M9 CLOSED. Verified: the full loop ran green.")"
+check "a closure with a current receipt passes"                    0 "$(run_in "$cb" false "M9 CLOSED. receipt: receipts/emitted-cb")"
+printf 'dirty\n' >> "$cb/covered.txt"
+check "a closure citing a stale receipt bounces"                   2 "$(run_in "$cb" false "M9 CLOSED. receipt: receipts/emitted-cb")"
+( cd "$cb" && git checkout -q -- covered.txt )
+printf 'command: check\nexit: 3\nrevision: %s\nfiles: covered.txt\n' "$cbrev" > "$cb/.superstack/receipts/emitted-cbred"
+check "a closure citing a failing-check receipt bounces"           2 "$(run_in "$cb" false "M9 CLOSED. receipt: receipts/emitted-cbred")"
+check "a negated closure stays silent"                             0 "$(run_in "$cb" false "The milestone is not closed yet.")"
+check "an interrogative closure stays silent"                      0 "$(run_in "$cb" false "Should the campaign be closed?")"
+check "bare closed-prose without a campaign noun stays silent"     0 "$(run_in "$cb" false "Closed the file handle after the read.")"
+check "a cited receipt path with an M-number does not arm closure" 0 "$(run_in "$cb" false "The receipts/emitted-m9-verify file is current.")"
+mk "$user" "$filler"
+check "a non-mutating closure statement stays silent"              0 "$(run_in "$cb" false "M9 CLOSED on a light pass.")"
+mk "$user" "$edit" "$claimtxt"
+rm -rf "$cb"
+
 # The freeze (D-47): any widening of claimre goes red here first; a new stem
 # needs a DECISIONS.md ruling, not a drift observation.
 pin=1411172341

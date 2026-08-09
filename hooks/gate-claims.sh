@@ -171,7 +171,25 @@ judge="$(printf '%s' "$judge" | sed -E \
 # that replace widening.
 claimre='\b(done|finished|implemented|complete|completed|fixed|resolved|passing|shipped|succeeded|deployed|merged|pushed|good to go|works now|all green|(is|are|now) live|(tests?|checks?|suite|build) (pass(es|ed)?|(are |is )?green)|successfully (ran|deployed|merged|pushed|applied|installed|migrated|completed|built|created|updated|fixed)|ready (to|for) (merge|ship|commit|deploy|push|review)|wrapped up|all set|up_and_running|work(s|ing)? as expected|taken care of|in good shape|no (known |remaining |outstanding )?(issues|errors|problems|failures)( (found|left|remain(ing)?))?)\b'
 phrase="$(printf '%s' "$judge" | grep -oE "$claimre" | head -n 1)"
-[ -n "$phrase" ] || exit 0
+
+# Closure arm (D-67): a campaign closure or milestone pass is receipts, not
+# prose. "M2 CLOSED" matches no claim stem above, so closures get their own
+# arm — BESIDE the frozen grammar, never inside it; the claimre line and its
+# cksum pin are untouched. The claim is a clause pairing a campaign noun
+# (campaign/milestone/plan/M-number) with clos(ed|es|ure), either order,
+# judged after question, slashed-path, and dotted-identifier strips (a cited
+# path like receipts/emitted-m1-verify must not arm the M-number class) and
+# a negated-closure strip in both orders — over-stripping is the fail-open
+# direction. No \b inside the sed strips (BSD drops it silently); grep -E
+# honours it on both platforms, so closre uses it freely. Unlike an ordinary
+# done-claim, ledger wording never substitutes: on a mutating turn a closure
+# passes ONLY through the receipt fast path — see the bounce below it.
+closre='\b(campaign|milestone|plan|m[0-9]+)\b[^.;!?]*\bclos(ed|es|ure)\b|\bclos(ed|es|ure)\b[^.;!?]*\b(campaign|milestone|plan|m[0-9]+)\b'
+cjudge="$(printf '%s' "$judge" | sed -E 's/[^.;!?]*\?/ /g; s|[^[:space:]]*/[^[:space:]]*| |g; s/[a-z0-9_-]+\.[a-z0-9]+/ /g')"
+cjudge="$(printf '%s' "$cjudge" | sed -E "s/[^.;!?]*$negre[^.;!?]*clos(ed|es|ure)[^.;!?]*/ /g; s/[^.;!?]*clos(ed|es|ure)[^.;!?]*$negre[^.;!?]*/ /g")"
+closure="$(printf '%s' "$cjudge" | grep -oE "$closre" | head -n 1)"
+[ -n "$phrase" ] || [ -n "$closure" ] || exit 0
+[ -n "$phrase" ] || phrase="$closure"
 
 # .superstack/ resolves through the one shared rule (hooks/superstack-root.sh):
 # the cwd's own record wins, else the git root's. Sourced so the six resolution
@@ -217,7 +235,45 @@ if [ -n "$cites" ]; then
       exit 0
     fi
     for c in $cites; do
-      grep -q "$fphead" "$root/.superstack/$c" 2>/dev/null || { logline "$(date +%F) FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
+      rf="$root/.superstack/$c"
+      # A receipt recording a failing check never vouches, whatever its
+      # freshness — the run it records did not pass.
+      if grep -qE '^exit: *[1-9]' "$rf" 2>/dev/null; then
+        logline "$(date +%F) FASTRED phrase=$phrase receipt=$c"; fpstate=red; break
+      fi
+      rfiles="$(sed -n 's/^files: *//p' "$rf" 2>/dev/null | head -n 1)"
+      if [ -n "$rfiles" ]; then
+        # Files-bound receipt (D-66): freshness is the covered SURFACE, not
+        # the head — an unrelated commit must not stale it; a covered change,
+        # committed or dirty, must. The filesig recipe matches
+        # scripts/superstack-mint.sh exactly (integration rows in test-gate.sh
+        # pin the pairing). Any parse or git doubt falls back to the legacy
+        # head-substring check below — fail-open, never fail-weird. Paths
+        # with spaces are unsupported: the field word-splits, in both writers.
+        # No \b here: BSD sed ignores it SILENTLY (the portability trap this
+        # file already documents), which would send every receipt down the
+        # legacy branch on macOS while Linux behaves — grep -oE is portable.
+        rrev="$(sed -n 's/^revision: *//p' "$rf" 2>/dev/null | head -n 1 | grep -oE '[0-9a-f]{7,40}' | head -n 1)"
+        rsig="$(sed -n 's/^filesig: *//p' "$rf" 2>/dev/null | head -n 1)"
+        fresh=yes
+        if [ -n "$rrev" ] && git -C "$root" rev-parse -q --verify "$rrev^{commit}" >/dev/null 2>&1; then
+          # shellcheck disable=SC2086
+          [ -n "$(git -C "$root" diff --name-only "$rrev" HEAD -- $rfiles 2>/dev/null)" ] && fresh=no
+        else
+          grep -q "$fphead" "$rf" 2>/dev/null || fresh=no
+        fi
+        if [ "$fresh" = yes ] && [ -n "$rsig" ]; then
+          # shellcheck disable=SC2086
+          nsig="$( (cd "$root" && git diff HEAD -- $rfiles 2>/dev/null; git status --porcelain -- $rfiles 2>/dev/null) | cksum | cut -d' ' -f1)"
+          [ "$nsig" = "$rsig" ] || fresh=no
+        elif [ "$fresh" = yes ]; then
+          # shellcheck disable=SC2086
+          [ -n "$(cd "$root" && git status --porcelain -- $rfiles 2>/dev/null)" ] && fresh=no
+        fi
+        [ "$fresh" = yes ] || { logline "$(date +%F) FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
+      else
+        grep -q "$fphead" "$rf" 2>/dev/null || { logline "$(date +%F) FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
+      fi
     done
     if [ "$fpstate" = pass ]; then
       logline "$(date +%F) FASTPASS phrase=$phrase"
@@ -257,6 +313,10 @@ done
 # The no-issues vouch family is safe by construction: its `no` lives inside
 # the stem itself, and a bare noun is never a negstem.
 sup="$(printf '%s' "$sup" | sed -E "s/(^|[^a-z0-9_-])no ([a-z0-9'’-]+ ){1,2}$negstem([^a-z]|$)/ /g")"
+# Closure-armed turns skip both suppressor exits: the closure claim carries
+# no claimre stem to survive the strips, and a mixed honest clause beside a
+# closure claim is still a closure claim — the artifact requirement stands.
+if [ -z "$closure" ]; then
 printf '%s' "$sup" | grep -qE "$claimre" || { logline "$(date +%F) SUPPRESS phrase=$phrase"; exit 0; }
 # Mixed-clause honest report: a clause reporting live breakage beside the
 # claim clause is candour — bouncing it is the harm the INVARIANT above names
@@ -271,6 +331,7 @@ mixed="$(printf '%s\n' "$judge" | tr '.;!?' '\n\n\n\n' | while IFS= read -r _cl;
   echo hit; break
 done)"
 [ -z "$mixed" ] || { logline "$(date +%F) MIXED phrase=$phrase"; exit 0; }
+fi
 
 # Arm only if THIS turn changed something: after the last real user message,
 # look for editing tools or a subagent dispatch (Task/Agent) — a subagent's own
@@ -353,6 +414,28 @@ if ! printf '%s\n' "$seg" | grep -qE '"name" *: *"(Edit|MultiEdit|Write|Notebook
   # `>`, because the char before it is the quote. One bounce, priced.
   bashmut='(^|\\n|[^-A-Za-z0-9_])(sed +(-[a-zA-Z]+ +)*-[a-zA-Z]*i|tee |git +(-C +[^ ]+ +)?(add|commit|push|merge|apply|rm|mv|reset|restore|clean|stash|checkout)($|[^-A-Za-z0-9_])|gh +(pr|release|issue|repo|gist|secret|workflow) +(create|merge|edit|comment|close|reopen|ready|delete|upload|run|set)|(npm|pnpm|yarn) +publish|terraform +(apply|destroy|import)|kubectl +(apply|create|delete|patch|replace|scale)|docker +(push|rmi)|(mv|cp|rm|dd|touch|rmdir|mkdir|truncate|chmod|chown|wget) )|--in-place|curl [^|]*(-[a-zA-Z]*[oO]\b|--output|--remote-name)|ln +-[a-zA-Z]*s|open\([^)]*,.{0,2}[wa][b+]?.{0,2}\)|[^<>&=-]>{1,2} *[0-9]*[A-Za-z_./~$\\-]|&>{1,2} *[0-9]*[A-Za-z_./~$\\-]'
   printf '%s' "$cmds" | grep -qE "$bashmut" || exit 0
+fi
+
+# Closure bounce (D-67): reaching this line closure-armed on a mutating turn
+# means the receipt fast path did not pass — no citation, or the cite logged
+# CITEMISS/FASTSTALE/FASTRED on its way through. A ledger sentence is not an
+# artifact, so this sits BEFORE the ledger check: closures pass on receipts
+# or not at all.
+if [ -n "$closure" ]; then
+  logline "$(date +%F) CLOSEBOUNCE closure=$closure state=${fpstate:-nocite}"
+  cat >&2 <<'MSG'
+superstack closure gate: this turn claims a campaign closure or milestone pass,
+and no current receipt backs it. A closure is receipts, not prose. Do ONE:
+- Mint the closure receipt where the check runs:
+  scripts/superstack-mint.sh --receipt <name> --files "<paths>" -- <the check>
+  then cite it in the closing message: receipt: receipts/<name>
+- If the cited receipt is stale or records a failing run, re-run the check and
+  re-mint — never edit a receipt by hand.
+- If the closure has not actually happened, say so plainly and leave the
+  frontier open.
+(Knob: SUPERSTACK_GATES=all|claims|off — off silences every superstack gate.)
+MSG
+  exit 2
 fi
 
 # A ledger token vouches only with content attached — a bare "Verified:"
