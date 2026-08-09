@@ -7,8 +7,9 @@
 # that prompted it is 2 of 5; it cannot see rhetoric, KERNEL.md, README.md,
 # commit messages, or chat replies.
 #
-# Scope: superstack-owned shell + module skill bodies. Kernel files excluded:
-# their style is upstream's and their comments cannot be edited here.
+# Scope: every shell comment and every skill body in the tree, former kernel
+# files included (their edits go through KERNEL.md's edit law; this scan is
+# what keeps the prose honest after one). Rationale for the widening: D-59.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"; root="$here/.."
 CEILING="${NARRATIVE_CEILING:-0}"
@@ -18,22 +19,15 @@ CEILING="${NARRATIVE_CEILING:-0}"
 # exemption) and catches nothing these already catch. See D-11.
 TELLS='([0-9]{4}-[0-9]{2}-[0-9]{2}|\([0-9]+\.[0-9]+\.[0-9]+\)|until [0-9]+\.[0-9]|\b(measured|verified by|was written|used to|had never|has never|turns out|it turned out)\b)'  # narrative-exempt
 
-kernel="superstack-scope superstack-debug superstack-review superstack-verify superstack-ship superstack-status"
-
 # Two grep passes over all files at once, and no subprocess per file: the
 # PostToolUse arm runs this on EVERY edit, so it has to stay cheap. Do not
 # reintroduce a per-file loop or a `basename` call here without re-timing it.
 sh_files=""
 for f in "$root"/hooks/*.sh "$root"/scripts/*.sh; do
-  case "${f##*/}" in
-    gate-claims.sh|inject-project-pointer.sh|test-gate.sh|superstack-status.sh) continue ;;  # kernel-owned
-  esac
   sh_files="$sh_files $f"
 done
 md_files=""
-for d in "$root"/skills/superstack-*/; do
-  name="${d%/}"; name="${name##*/}"
-  case " $kernel " in *" $name "*) continue ;; esac
+for d in "$root"/skills/*/; do
   [ -f "$d/SKILL.md" ] && md_files="$md_files $d/SKILL.md"
 done
 

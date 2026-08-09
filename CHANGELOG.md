@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.1.0 (2026-08-08)
+
+Campaign-shaped work now routes end to end, a receipt can carry the
+evidence a done-claim needs, and the corrections you give once follow
+you into every project.
+
+- **Campaign routing**: describe a many-session build at the front door
+  and it routes to the campaign runner and its plan files; the scoping
+  skill can promote a task into a campaign mid-flight; a check that goes
+  red inside a campaign routes to the debugging skill; and a campaign
+  that closes writes its verified claims into the project's claims
+  record. Asking the idea door for changes to a running codebase now
+  lands in scoping instead of idea-shaping.
+- **Receipts as evidence**: end a turn by citing a receipt file and the
+  done-claim gate reads the receipt instead of parsing your prose. The
+  gate checks exactly two things: the cited file exists under
+  `.superstack/receipts/`, and its content names the current short
+  commit; everything deeper stays the verify skill's job. The gate's
+  quiet judgment calls (suppressed phrasings, mixed honest reports,
+  missing or stale citations) now leave dated rows in the gate log, and
+  a workspace with no git commit yet passes with a row saying exactly
+  that.
+- **Personal rule book**: save a correction about how you like to work
+  once, at the user level, and it surfaces at session start in every
+  project the plugin runs in, beside that project's own rules; the
+  project's rule wins where they collide.
+- **State export**: `scripts/superstack-export.sh` bundles a project's
+  `.superstack/` state so a second machine or a fresh clone can pick the
+  work up where it stands.
+- **Outside reviewer channel**: name a second-model command of your
+  choosing in one environment variable and reviews add its reading as
+  one more voice; it runs from a scratch directory, is asked to identify
+  itself first, and its findings arrive marked unverified until checked
+  against the source. Unconfigured, nothing runs.
+- **Status doctor**: the read-only status report counts shipped claims
+  in the grammar the shipping skill actually writes, and the backlog
+  lines name the oldest still-open item, so a quiet queue shows its age.
+- **Suites**: new checks pin the campaign-routing facts above, run the
+  plugin manifest validator with its warnings treated as failures, and
+  lint every skill body and hook comment for narrative drift; CI
+  installs the `claude` CLI so all 23 suites run on the bare runners on
+  every push.
+
 ## 1.0.0 (2026-08-03)
 
 The idea-shaping interior is rebuilt around a visible, durable decision

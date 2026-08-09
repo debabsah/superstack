@@ -25,6 +25,11 @@ jobs:
             *) sudo apt-get update && sudo apt-get install -y jq ;;
           esac
           command -v jq
+      - name: Ensure the claude CLI exists (test-manifest fails closed without it)
+        run: |
+          command -v claude && claude --version && exit 0
+          npm install -g @anthropic-ai/claude-code
+          command -v claude && claude --version
       - name: Run all hook suites
         run: |
           for f in hooks/test-*.sh; do

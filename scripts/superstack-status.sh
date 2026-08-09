@@ -81,14 +81,17 @@ fi
 set -- "$f"/claims-log "$f"/claims-log.*
 logs=""; for c in "$@"; do [ -f "$c" ] && logs="$logs $c"; done
 if [ -n "$logs" ]; then
-  # A FALSIFIED line quotes its original Verified: text — count it once, as falsified.
+  # Count POSITIVELY against the row grammar superstack-ship appends — `date ·
+  # claim · evidence`. The Verified: token lives in reports, never in rows; a
+  # token grep here reads 0 forever. A FALSIFIED row (superstack-debug's
+  # marker) keeps its original text — count it once, as falsified.
   # shellcheck disable=SC2086
-  claims=$(cat $logs 2>/dev/null | grep 'Verified:' | grep -vc 'FALSIFIED')
+  claims=$(cat $logs 2>/dev/null | grep -E '^20[0-9]{2}-[0-9]{2}-[0-9]{2} · ' | grep -vc 'FALSIFIED')
   # shellcheck disable=SC2086
-  falsified=$(cat $logs 2>/dev/null | grep -c 'FALSIFIED')
-  echo "claims: $claims shipped Verified: lines, $falsified falsified"
+  falsified=$(cat $logs 2>/dev/null | grep -E '^20[0-9]{2}-[0-9]{2}-[0-9]{2} · ' | grep -c 'FALSIFIED')
+  echo "claims: $claims shipped claim(s), $falsified falsified"
 else
-  echo "claims: no log yet (superstack-ship appends shipped Verified: lines)"
+  echo "claims: no log yet (superstack-ship appends one row per shipped Verified: line)"
 fi
 
 # Everything below: the superstack-owned state files the kernel doctor
@@ -125,8 +128,17 @@ if [ -f "$f/doctrine.md" ]; then
 fi
 
 if [ -f "$f/queue.md" ]; then
-  qn=$(grep '^- Q' "$f/queue.md" 2>/dev/null | grep -vc '\[taken\|\[dropped\|\[retired')
-  echo "queue: $qn open parked item(s)"
+  # Open = no closure annotation; [resolved and [reshaped are closures too, or
+  # both the count and the oldest date point at finished work. Oldest = first
+  # open entry (append order).
+  openq="$(grep '^- Q' "$f/queue.md" 2>/dev/null | grep -v '\[taken\|\[dropped\|\[retired\|\[resolved\|\[reshaped')"
+  if [ -n "$openq" ]; then
+    qn="$(printf '%s\n' "$openq" | grep -c '^- Q')"
+    oldest="$(printf '%s\n' "$openq" | head -1 | sed -n 's/^- Q[0-9]* (\([0-9-]*\)).*/\1/p')"
+    echo "queue: $qn open parked item(s) (oldest open: ${oldest:-unknown})"
+  else
+    echo "queue: 0 open parked item(s)"
+  fi
 fi
 
 if [ -f "$f/value-log" ]; then

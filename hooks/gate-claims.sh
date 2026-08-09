@@ -39,8 +39,8 @@ last="$(printf '%s' "$payload" | grep -oE '"last_assistant_message": *"([^"\\]|\
 # unaffected either way, since the prefix carries none of their tokens.
 last="$(printf '%s' "$last" | sed -E 's/^"last_assistant_message": *"//; s/"$//')"
 
-# The field arrives JSON-ENCODED, and until 0.7.0 nothing decoded it. A newline
-# is therefore a literal backslash followed by `n`, so a claim that begins its
+# The field arrives JSON-ENCODED; decode before matching. Undecoded, a newline
+# is a literal backslash followed by `n`, so a claim that begins its
 # own line — the single most common shape of a real final message — had a WORD
 # CHARACTER in front of it and `claimre`'s leading \b never matched.
 # "Refactored the parser.\nDone." walked straight through. The mirror held too:
@@ -164,9 +164,67 @@ judge="$(printf '%s' "$judge" | sed -E \
 # real negator precedes it ("can't promise there are no issues"). Prose cost
 # accepted: "no issues with A, but B is broken" arms on its first clause — a
 # mixed report vouching for A ungated was the drift class itself.
+#
+# FROZEN (D-47): this grammar no longer widens on drift observations — a new
+# stem needs a DECISIONS.md ruling first, and test-gate.sh pins this line by
+# cksum. The SUPPRESS/MIXED/CITEMISS/FASTSTALE log rows are the tuning data
+# that replace widening.
 claimre='\b(done|finished|implemented|complete|completed|fixed|resolved|passing|shipped|succeeded|deployed|merged|pushed|good to go|works now|all green|(is|are|now) live|(tests?|checks?|suite|build) (pass(es|ed)?|(are |is )?green)|successfully (ran|deployed|merged|pushed|applied|installed|migrated|completed|built|created|updated|fixed)|ready (to|for) (merge|ship|commit|deploy|push|review)|wrapped up|all set|up_and_running|work(s|ing)? as expected|taken care of|in good shape|no (known |remaining |outstanding )?(issues|errors|problems|failures)( (found|left|remain(ing)?))?)\b'
 phrase="$(printf '%s' "$judge" | grep -oE "$claimre" | head -n 1)"
 [ -n "$phrase" ] || exit 0
+
+# .superstack/ resolves through the one shared rule (hooks/superstack-root.sh):
+# the cwd's own record wins, else the git root's. Sourced so the six resolution
+# sites cannot drift; the fallback keeps a bare re-vendor at the old behaviour.
+# Resolution sits HERE, not at the ledger check: the fast path and the two
+# claim-exit log rows below need root and logger (D-47).
+. "$(dirname "$0")/superstack-root.sh" 2>/dev/null
+root="$(superstack_root 2>/dev/null)"
+[ -n "$root" ] || root="$(git rev-parse --show-toplevel 2>/dev/null)"; [ -n "$root" ] || root="."
+log="$root/.superstack/gate-log"
+
+# The writer owns the bound. This hook appends on every armed turn, so
+# leaving rotation to a model habit at ship time meant a session that never
+# ships grew the log forever — and it put the audited party in charge of its own
+# audit log. Same rule the SessionStart hook already states: expiry lives in the
+# deterministic half, not in hope. 200 lines is the tuning window superstack-status
+# reads; older lines have already served their purpose.
+logline() {
+  [ -d "$root/.superstack" ] || return 0
+  printf '%s\n' "$1" >> "$log"
+  if [ "$(wc -l < "$log" 2>/dev/null || echo 0)" -gt 200 ]; then
+    tmpl="$(mktemp "$log.XXXXXX" 2>/dev/null)" || return 0
+    tail -n 200 "$log" > "$tmpl" 2>/dev/null && mv "$tmpl" "$log" || rm -f "$tmpl"
+  fi
+}
+
+# Receipt fast path (D-47): a cited receipt that exists under the record and
+# names the current short HEAD passes the turn with no further wording
+# analysis. A missing or stale citation falls through UNCHANGED — the normal
+# path still judges the turn — and leaves its row, so fabricated and decayed
+# citations are audit data, not silent passes. No git head (bare fixture,
+# exported tree) keeps the fail-open charter: pass, and the row says why.
+cites="$(printf '%s' "$last" | grep -oE 'receipts/[A-Za-z0-9._-]+' | sort -u)"
+if [ -n "$cites" ]; then
+  fpstate=pass
+  for c in $cites; do
+    [ -f "$root/.superstack/$c" ] || { logline "$(date +%F) CITEMISS phrase=$phrase receipt=$c"; fpstate=miss; break; }
+  done
+  if [ "$fpstate" = pass ]; then
+    fphead="$(git -C "$root" rev-parse --short HEAD 2>/dev/null)"
+    if [ -z "$fphead" ]; then
+      logline "$(date +%F) FASTPASS phrase=$phrase head=none"
+      exit 0
+    fi
+    for c in $cites; do
+      grep -q "$fphead" "$root/.superstack/$c" 2>/dev/null || { logline "$(date +%F) FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
+    done
+    if [ "$fpstate" = pass ]; then
+      logline "$(date +%F) FASTPASS phrase=$phrase"
+      exit 0
+    fi
+  fi
+fi
 
 # ── False-bounce suppressors (S3, trial-only D-15; dogfood/reduction-trial/
 # PREREG.md §3) — exactly the five classes F1-mechanical-recheck reproduced,
@@ -199,7 +257,7 @@ done
 # The no-issues vouch family is safe by construction: its `no` lives inside
 # the stem itself, and a bare noun is never a negstem.
 sup="$(printf '%s' "$sup" | sed -E "s/(^|[^a-z0-9_-])no ([a-z0-9'’-]+ ){1,2}$negstem([^a-z]|$)/ /g")"
-printf '%s' "$sup" | grep -qE "$claimre" || exit 0
+printf '%s' "$sup" | grep -qE "$claimre" || { logline "$(date +%F) SUPPRESS phrase=$phrase"; exit 0; }
 # Mixed-clause honest report: a clause reporting live breakage beside the
 # claim clause is candour — bouncing it is the harm the INVARIANT above names
 # as worse than the miss. Stative markers only, tested per clause; a negated
@@ -212,7 +270,7 @@ mixed="$(printf '%s\n' "$judge" | tr '.;!?' '\n\n\n\n' | while IFS= read -r _cl;
   printf '%s' "$_cl" | grep -qE "$claimre" && continue
   echo hit; break
 done)"
-[ -z "$mixed" ] || exit 0
+[ -z "$mixed" ] || { logline "$(date +%F) MIXED phrase=$phrase"; exit 0; }
 
 # Arm only if THIS turn changed something: after the last real user message,
 # look for editing tools or a subagent dispatch (Task/Agent) — a subagent's own
@@ -229,7 +287,7 @@ done)"
 # Measured, not assumed: on a real 10MB transcript this runs ~0.315s vs ~0.687s
 # for the 0.6.0 window version — the full scan is *faster*, because grep streams
 # where `tail -n 600` seeks and then hands 600 multi-KB lines to a shell variable.
-# A two-path fast/slow variant measured no better and was deleted. Don't
+# A two-path fast/slow variant benchmarks no better. Don't
 # reintroduce a window here without a benchmark.
 transcript="$(printf '%s' "$payload" | sed -n 's/.*"transcript_path": *"\([^"]*\)".*/\1/p')"
 [ -n "$transcript" ] && [ -f "$transcript" ] || exit 0
@@ -257,7 +315,7 @@ fi
 # every hyphenated server (`mcp__github-mcp__create_pull_request`) — a hole in
 # the character class, not the verb list every comment here argued about.
 if ! printf '%s\n' "$seg" | grep -qE '"name" *: *"(Edit|MultiEdit|Write|NotebookEdit|Task|Agent|mcp__[A-Za-z0-9_-]*(edit|replace|insert|write|rename|delete|create|move|send|save|publish|upload|merge|append|remove|destroy)[A-Za-z0-9_-]*)"'; then
-  # Bash-side mutations arm too (0.6.0). Judged ONLY on the "command" values
+  # Bash-side mutations arm too. Judged ONLY on the "command" values
   # of Bash tool_use lines — text blocks and model-authored "description"
   # fields can't arm. /dev/null redirects are stripped before matching.
   # Signatures: sed -i/--in-place, tee, git state ops (incl. -C <path>),
@@ -287,8 +345,8 @@ if ! printf '%s\n' "$seg" | grep -qE '"name" *: *"(Edit|MultiEdit|Write|Notebook
   # reason `mv`/`cp` are in it.
   # Spelling variants matter as much as the verb list: `sed -E -i` puts the -i
   # in a LATER flag cluster, `curl -sLo` combines it into one, and a redirect
-  # target may start with digits (`> 2026-run.log`) — all missed while the
-  # fixture for each pinned the single spelling the pattern was written from.
+  # target may start with digits (`> 2026-run.log`) — all shapes a fixture
+  # misses when it pins only the single spelling its pattern came from.
   # The digit prefix still requires a non-digit after it, so `awk '$3 > 100'`
   # stays guarded. Accepted false arm, widened from the 0.6.0 note: a quoted
   # MUTATION VERB also arms (`grep -rn "rm -rf" scripts/`), not just a quoted
@@ -296,29 +354,6 @@ if ! printf '%s\n' "$seg" | grep -qE '"name" *: *"(Edit|MultiEdit|Write|Notebook
   bashmut='(^|\\n|[^-A-Za-z0-9_])(sed +(-[a-zA-Z]+ +)*-[a-zA-Z]*i|tee |git +(-C +[^ ]+ +)?(add|commit|push|merge|apply|rm|mv|reset|restore|clean|stash|checkout)($|[^-A-Za-z0-9_])|gh +(pr|release|issue|repo|gist|secret|workflow) +(create|merge|edit|comment|close|reopen|ready|delete|upload|run|set)|(npm|pnpm|yarn) +publish|terraform +(apply|destroy|import)|kubectl +(apply|create|delete|patch|replace|scale)|docker +(push|rmi)|(mv|cp|rm|dd|touch|rmdir|mkdir|truncate|chmod|chown|wget) )|--in-place|curl [^|]*(-[a-zA-Z]*[oO]\b|--output|--remote-name)|ln +-[a-zA-Z]*s|open\([^)]*,.{0,2}[wa][b+]?.{0,2}\)|[^<>&=-]>{1,2} *[0-9]*[A-Za-z_./~$\\-]|&>{1,2} *[0-9]*[A-Za-z_./~$\\-]'
   printf '%s' "$cmds" | grep -qE "$bashmut" || exit 0
 fi
-
-# .superstack/ resolves through the one shared rule (hooks/superstack-root.sh):
-# the cwd's own record wins, else the git root's. Sourced so the six resolution
-# sites cannot drift; the fallback keeps a bare re-vendor at the old behaviour.
-. "$(dirname "$0")/superstack-root.sh" 2>/dev/null
-root="$(superstack_root 2>/dev/null)"
-[ -n "$root" ] || root="$(git rev-parse --show-toplevel 2>/dev/null)"; [ -n "$root" ] || root="."
-log="$root/.superstack/gate-log"
-
-# The writer owns the bound (0.6.1). This hook appends on every armed turn, so
-# leaving rotation to a model habit at ship time meant a session that never
-# ships grew the log forever — and it put the audited party in charge of its own
-# audit log. Same rule the SessionStart hook already states: expiry lives in the
-# deterministic half, not in hope. 200 lines is the tuning window superstack-status
-# reads; older lines have already served their purpose.
-logline() {
-  [ -d "$root/.superstack" ] || return 0
-  printf '%s\n' "$1" >> "$log"
-  if [ "$(wc -l < "$log" 2>/dev/null || echo 0)" -gt 200 ]; then
-    tmpl="$(mktemp "$log.XXXXXX" 2>/dev/null)" || return 0
-    tail -n 200 "$log" > "$tmpl" 2>/dev/null && mv "$tmpl" "$log" || rm -f "$tmpl"
-  fi
-}
 
 # A ledger token vouches only with content attached — a bare "Verified:"
 # claims evidence and provides none. Bare PROVISIONAL stays legal: it

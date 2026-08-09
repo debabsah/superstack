@@ -1,6 +1,6 @@
 ---
 name: superstack-inception
-description: A new idea with no spec — a product, tool, feature, or app arriving as "I have an idea", "let's build", "create/make me X" — before any design artifact exists. Also on "shape this idea". Skip for bug fixes, specced tasks, trivial edits — and "new skill/module/pack" ideas (superstack-smith).
+description: A new idea with no spec — a product, tool, feature, or app arriving as "I have an idea", "let's build", "create/make me X". Also on "shape this idea". Skip for bug fixes, specced tasks, changes to a running codebase (superstack-scope) — and "new skill/module/pack" ideas (superstack-smith).
 ---
 
 # superstack-inception

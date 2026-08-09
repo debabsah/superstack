@@ -115,9 +115,10 @@ if [ -f "$vl" ]; then
 fi
 
 # queue: open parked items; oldest = first open entry's date (append order).
+# Open = no closure annotation ([taken/[dropped/[retired/[resolved/[reshaped).
 qf="$root/.superstack/queue.md"
 if [ -f "$qf" ]; then
-  openq="$(grep '^- Q' "$qf" 2>/dev/null | grep -v '\[taken\|\[dropped\|\[retired')"
+  openq="$(grep '^- Q' "$qf" 2>/dev/null | grep -v '\[taken\|\[dropped\|\[retired\|\[resolved\|\[reshaped')"
   if [ -n "$openq" ]; then
     qn="$(printf '%s\n' "$openq" | wc -l | tr -d ' ')"
     oldest="$(printf '%s\n' "$openq" | head -1 | sed -n 's/^- Q[0-9]* (\([0-9-]*\)).*/\1/p')"

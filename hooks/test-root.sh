@@ -90,8 +90,11 @@ printf '%s' "$out" | grep -qF "$(abs "$w")/.superstack"
 check "nested workspace: the status doctor reports the cwd's record" 0 "$?"
 
 # ------------------------------------------------------------------ fail-open
-mkdir -p "$tmp/repo/empty"
-out="$(printf '{"source":"startup"}' | (cd "$tmp/repo/empty" && bash "$here/inject-doctrine.sh" 2>/dev/null); echo "exit=$?")"
+# CLAUDE_CONFIG_DIR pinned to an empty fixture: the hook also reads the
+# machine's real personal rule book from there, and "no record anywhere"
+# must mean the fixture, not this machine.
+mkdir -p "$tmp/repo/empty" "$tmp/cfg-empty"
+out="$(printf '{"source":"startup"}' | (cd "$tmp/repo/empty" && CLAUDE_CONFIG_DIR="$tmp/cfg-empty" bash "$here/inject-doctrine.sh" 2>/dev/null); echo "exit=$?")"
 check "no record anywhere: doctrine hook is silent and exits 0" "exit=0" "$out"
 
 echo

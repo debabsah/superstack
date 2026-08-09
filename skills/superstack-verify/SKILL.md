@@ -7,12 +7,14 @@ description: Use when about to claim work is complete, fixed, passing, correct, 
 
 "It ran" is not verification. **Evidence before claims, always.** Verify at the layer of the *claim*, not the layer below it.
 
+Before deferring to a dedicated end-to-end verify skill, confirm one is actually installed — check the skill listing, don't assume; with none present, this runner owns the whole check.
+
 ## The gate
 
 Before any success/completion claim or expression of satisfaction:
 
 1. **Identify** the command or observation that would *prove* this specific claim.
-2. **Run it fresh, in full** (not a remembered earlier run; not a partial check).
+2. **Run it fresh, in full** (not a remembered earlier run; not a partial check). One exception: a still-current receipt — superstack-execute's receipt-decay law owns when one counts, and decayed means fresh.
 3. **Read** the whole output — exit code, counts, the actual values.
 4. **Verify at the layer of the claim.** Exit 0 / "deploy healthy" / "containers up" only proves the layer *below* the claim. If the claim is "the output is correct," look at the output. If it's "the page renders," look at the page. If it's "the definitions load," import them in the built artifact and count them.
 5. **Only then** state the claim — as ledger lines: `Verified: <claim> — ran <command> -> saw <result>`, with anything unchecked under `Assumed:` or `PROVISIONAL`. If it fails, state the actual status with the output.
@@ -36,4 +38,4 @@ Before any success/completion claim or expression of satisfaction:
 
 "should", "probably", "seems to", "Great/Perfect/Done!" before running anything, trusting a subagent's "success" without checking its diff, relying on a partial check, a fallback you just wrote that swallows a failure (`except: pass`, empty-on-error, a guessed default — announce it or delete it), "just this once." Any of these → run the command, read the output, *then* claim.
 
-The plugin's Stop-hook gate bounces done-claims that carry no ledger marker — it checks the format; the truth is this skill's job.
+The plugin's Stop-hook gate bounces done-claims that carry no ledger marker and no receipt line it can check — it checks the format; the truth is this skill's job.

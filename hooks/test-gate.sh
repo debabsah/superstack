@@ -80,25 +80,25 @@ mk "$user" "$mcprename";         check "MCP rename/delete/create tools arm the g
 mk "$user" "$dispatch";          check "subagent dispatch arms (delegated work counts)" 2 "$(run false "$claim")"
 mk "$user" "$edit" "$scuser";    check "sidechain user line does not reset the turn cut" 2 "$(run false "$claim")"
 
-# claim side reads the supported payload field (0.5.2) — the transcript can
+# claim side reads the supported payload field — the transcript can
 # neither supply the claim (old Claude Code: fail open) nor vouch for it.
 # Obsoleted by this move: the chunked-message and tool_use-flush cases (Claude
 # Code assembles the complete final message) and sidechain text vouching.
 mk "$user" "$edit" "$claimtxt"
 check "payload without last_assistant_message fails open" 0 "$(run_nofield)"
 
-# ledger tokens vouch only with content attached (0.5.2)
+# ledger tokens vouch only with content attached
 check "bare Verified: token no longer vouches"  2 "$(run false "Done. Verified:")"
 check "bare Assumed: token no longer vouches"   2 "$(run false "Everything is complete. Assumed:")"
 check "bare PROVISIONAL is a legal self-downgrade" 0 "$(run false "Done. PROVISIONAL")"
 
-# negated statements are not claims (0.5.2)
+# negated statements are not claims
 check "negated claim does not fire"  0 "$(run false "This is not done yet. The tests are not passing either. Next I will wire the parser.")"
 check "negation does not shield a real claim" 2 "$(run false "Tests were not passing before this change; now everything is fixed and all green.")"
 check "typographic-apostrophe negation passes" 0 "$(run false "The parser isn’t finished.")"
 check "typographic negation under C locale"    0 "$(run_c false "The parser isn’t finished.")"
 
-# Bash-side mutations arm the gate (0.6.0) — high-precision signatures only,
+# Bash-side mutations arm the gate — high-precision signatures only,
 # judged only on Bash tool_use lines; a false arm costs at most one spurious
 # bounce demand (still needs a claim + no ledger), tuned from gate-log.
 bashsedi='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"sed -i s/a/b/ config.txt"}}]}}'
@@ -138,7 +138,7 @@ mk "$user" "$bashdockerrm"; check "--rm flag is not an rm command"             0
 mk "$user" "$bashdesc";   check "mutation words in the description field do not arm" 0 "$(run false "$claim")"
 mk "$user" "$textmention"; check "text mentioning mutations does not arm"      0 "$(run false "$claim")"
 
-# more write paths that leave no >, no sed -i and no git (0.6.1). Selective on
+# more write paths that leave no >, no sed -i and no git. Selective on
 # purpose: bare `python -c` is NOT a signature (it is overwhelmingly used for
 # read-only one-liners), so only a write-mode open() arms.
 bashcurlo='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"curl -sL https://x/y.tar.gz -o dist.tgz"}}]}}'
@@ -192,7 +192,7 @@ check "negation does not shield a real success claim"       2 "$(run false "The 
 check "'not everything checks out' does not fire"           0 "$(run false "Not everything checks out.")"
 check "'nothing checks out yet' does not fire"              0 "$(run false "Nothing checks out yet.")"
 
-# claim-detection recall (0.6.1) — real completion phrasings the 14-stem list
+# claim-detection recall — real completion phrasings the 14-stem list
 # missed. Every one of these exited 0 against the shipped 0.6.0 gate; the
 # "successfully deployed" case is a T3 action escaping the backstop entirely.
 mk "$user" "$edit" "$claimtxt"
@@ -234,7 +234,7 @@ check "'not live yet' cannot fire (tautology)" 0 "$(run false "The feature is no
 # ...and the prose guard: `live` is a common word, so only a copula form counts.
 check "'the fixtures live in tests/' does not fire" 0 "$(run false "The fixtures live in tests/fixtures and are read at import time.")"
 
-# Hedged honesty must not bounce (0.7.0). negre allowed only adverb fillers
+# Hedged honesty must not bounce. negre allowed only adverb fillers
 # between the negator and the stem, so any hedge carrying a VERB escaped the
 # strip and the gate bounced the exact candour it exists to buy — 7 of 7 sampled
 # phrasings fired at 0.6.1, including a plain "Nothing is fixed yet."
@@ -335,7 +335,7 @@ check "SUPERSTACK_GATES=claims keeps the claims gate"      2 "$(run_gates claims
 check "SUPERSTACK_GATES=all keeps the claims gate"         2 "$(run_gates all "$claim")"
 check "an unknown knob value keeps the gates armed"        2 "$(run_gates nonsense "$claim")"
 
-# Outward Bash verbs arm the gate (0.7.0) — publish/merge/deploy leave no `>`,
+# Outward Bash verbs arm the gate — publish/merge/deploy leave no `>`,
 # no `sed -i` and no bare `git`, and they are the T3 actions the tier table
 # ranks highest. The read-only `gh` forms must stay silent: superstack-verify itself
 # recommends `gh pr checks` as the counting-environment probe.
@@ -380,7 +380,7 @@ mk "$user" "$bashdpull";    check "docker pull does not arm"           0 "$(run 
 # and composed into a bounce on a turn that changed nothing.
 mk "$user" "$bashk8sroll";  check "probe-only turn does not bounce a deploy claim" 0 "$(run false "Deployed to production.")"
 
-# MCP write verbs beyond the edit family (0.7.0). Whatever the server calls it,
+# MCP write verbs beyond the edit family. Whatever the server calls it,
 # a send/save/publish/execute is delegated work that changed something.
 mcpsend='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"mcp__slack__send_message","input":{}}]}}'
 mcpexec='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"mcp__supabase__execute_sql","input":{}}]}}'
@@ -448,8 +448,8 @@ mk "$user" "$edit"
 check "message quoting stop_hook_active cannot bypass" 2 "$(run false "Done. It sets \\\"stop_hook_active\\\" : true in the payload.")"
 check "message quoting transcript_path cannot bypass"  2 "$(run false "Done. It reads \\\"transcript_path\\\": \\\"/nope\\\" first.")"
 
-# the arming window must cover the whole turn, not just its last 600 lines
-# (0.6.1). The escape was correlated with the risk: long tool-heavy turns that
+# the arming window must cover the whole turn, not just its last 600 lines.
+The escape was correlated with the risk: long tool-heavy turns that
 # edit early and claim at the end were the only ones silently skipping the gate.
 mk_long 700
 check "long turn still arms (edit outside the 600-line window)" 2 "$(run false "$claim")"
@@ -485,8 +485,8 @@ run false "$calibrated" >/dev/null
 # the status doctor (read-only; reads the fixture record built above)
 # Fixture uses the real grammar (project-template.md: one `- ` bullet per open
 # obligation) and the real header, which itself names both tokens. A fixture
-# without the header was green fiction — both counters reported +1 forever
-# (0.6.1). The prose line pins the other half: mentioning a token is not owing one.
+# without the header was green fiction — both counters reported +1 forever.
+The prose line pins the other half: mentioning a token is not owing one.
 printf '%s\n' '# Residuals — undischarged Assumed:/PROVISIONAL (superstack-verify discharges; SessionStart surfaces the count)' > "$tmp/.superstack/residuals.md"
 printf '%s\n' '- 2026-01-01 (0.1.0) Assumed: staging matches prod - could not check - discharge: diff the configs' >> "$tmp/.superstack/residuals.md"
 printf '%s\n' 'Prose about how an Assumed: line gets discharged should not be counted as one.' >> "$tmp/.superstack/residuals.md"
@@ -499,7 +499,7 @@ printf '%s' "$out" | grep -q "residuals: 1"; check "superstack-status counts ope
 printf '%s' "$out" | grep -q "overlay: tight-proj"; check "superstack-status reads the tight pointer form the hook accepts" 0 "$?"
 printf '%s' "$out" | grep -q "2 bounces / 1 armed passes"; check "superstack-status tallies anchor on the log grammar, not substrings" 0 "$?"
 
-# the SessionStart injector (0.6.1) — it promotes file text into the session
+# the SessionStart injector — it promotes file text into the session
 # preamble, so its inputs are bounded and its git-ignored claim is detected.
 inj="$here/inject-project-pointer.sh"
 ijt="$(mktemp -d)"; mkdir -p "$ijt/.superstack/tasks"
@@ -509,7 +509,7 @@ printf '%s' "$iout" | grep -q "overlay"; check "injector surfaces the overlay po
 
 # control characters in the overlay must be stripped. Assert on CONTENT, not on
 # a line count: a tab never forged a line, so a line-count assertion passed
-# identically with and without clean() — it pinned nothing it named (0.6.1).
+# identically with and without clean() — it pinned nothing it named.
 printf '<!-- pointer: A\033B\tC -->\n' > "$ijt/.superstack/project.md"
 iout="$(cd "$ijt" && bash "$inj" 2>&1)"
 printf '%s' "$iout" | LC_ALL=C grep -q '[[:cntrl:]]'; check "injector strips control chars from the pointer" 1 "$?"
@@ -530,7 +530,7 @@ printf '%s' "$iout" | grep -q '+11 more'; check "injector announces the tasks it
 printf '%s' "$iout" | grep -q 'wire the parser'; check "injector surfaces the task pointer's next: action" 0 "$?"
 
 # the residual counter anchors on the line grammar too — the file's own header
-# names both tokens, so a substring count reports +1 forever (0.6.1)
+# names both tokens, so a substring count reports +1 forever
 rm -f "$ijt"/.superstack/tasks/*.md
 printf '%s\n' '# Residuals — undischarged Assumed:/PROVISIONAL (superstack-verify discharges; SessionStart surfaces the count)' > "$ijt/.superstack/residuals.md"
 printf '%s\n' '- 2026-01-01 (0.1.0) Assumed: staging matches prod — could not check — discharge: diff the configs' >> "$ijt/.superstack/residuals.md"
@@ -575,6 +575,48 @@ check "not in good shape does not fire"       0 "$(run false "The branch is not 
 check "no-issues claim gates"                 2 "$(run false "No issues found.")"
 check "no remaining issues gates"             2 "$(run false "There are no remaining issues.")"
 check "hedged no-issues does not fire"        0 "$(run false "I cannot promise there are no issues left.")"
+
+# D-47: the receipt fast path, the claim-exit log rows, and the frozen
+# grammar. A cited receipt that exists under .superstack/receipts/ and names
+# the current short HEAD passes with no ledger token; missing or stale
+# citations fall through unchanged and leave their audit rows.
+fp="$tmp/fprepo"
+git init -q -b main "$fp"
+git -C "$fp" -c user.email=t@t -c user.name=t commit --allow-empty -q -m fixture
+mkdir -p "$fp/.superstack/receipts"
+fphead="$(git -C "$fp" rev-parse --short HEAD)"
+printf 'check: suite\nexit 0\nrevision %s\n' "$fphead" > "$fp/.superstack/receipts/attested-fp.txt"
+printf 'check: suite\nexit 0\nrevision 0000000\n' > "$fp/.superstack/receipts/attested-stale.txt"
+run_in() { # $1 = cwd; $2 = stop_hook_active; $3 = last_assistant_message
+  printf '{"session_id":"t","transcript_path":"%s","stop_hook_active":%s,"last_assistant_message":"%s"}' "$tmp/t.jsonl" "$2" "$3" \
+    | (cd "$1" && bash "$gate") >/dev/null 2>&1
+  echo $?
+}
+mk "$user" "$edit" "$claimtxt"
+check "current receipt citation fast-passes without a ledger token" 0 "$(run_in "$fp" false "Done. receipt: receipts/attested-fp.txt")"
+grep -q "FASTPASS" "$fp/.superstack/gate-log" 2>/dev/null; check "fast pass leaves its FASTPASS row" 0 "$?"
+check "stale receipt citation falls through and still bounces bare claims" 2 "$(run_in "$fp" false "Done. receipt: receipts/attested-stale.txt")"
+grep -q "FASTSTALE" "$fp/.superstack/gate-log" 2>/dev/null; check "stale citation leaves its FASTSTALE row" 0 "$?"
+check "missing receipt citation with a ledger token still passes (fail-open)" 0 "$(run_in "$fp" false "Done. Verified: suite green. receipt: receipts/absent.txt")"
+grep -q "CITEMISS" "$fp/.superstack/gate-log" 2>/dev/null; check "missing citation leaves its CITEMISS row" 0 "$?"
+# A workspace with no git commit has no head to be current against: the cited
+# receipt passes by the fail-open charter, and the row must say why (head=none),
+# or the lenient branch has silently widened into an unlogged bypass.
+fpn="$tmp/fpnogit"
+mkdir -p "$fpn/.superstack/receipts"
+printf 'check: suite\nexit 0\n' > "$fpn/.superstack/receipts/attested-ng.txt"
+check "no-git workspace with a cited receipt fast-passes (fail-open charter)" 0 "$(run_in "$fpn" false "Done. receipt: receipts/attested-ng.txt")"
+grep -q "FASTPASS.*head=none" "$fpn/.superstack/gate-log" 2>/dev/null; check "no-git fast pass leaves its head=none row" 0 "$?"
+check "question-form claim still exits quietly" 0 "$(run_in "$fp" false "Should I mark this done?")"
+grep -q "SUPPRESS" "$fp/.superstack/gate-log" 2>/dev/null; check "suppressor exit leaves its SUPPRESS row" 0 "$?"
+check "mixed honest report still exits quietly" 0 "$(run_in "$fp" false "Fixed the parser, but the build is still failing.")"
+grep -q "MIXED" "$fp/.superstack/gate-log" 2>/dev/null; check "mixed exit leaves its MIXED row" 0 "$?"
+# The freeze (D-47): any widening of claimre goes red here first; a new stem
+# needs a DECISIONS.md ruling, not a drift observation.
+pin=1411172341
+now="$(grep '^claimre=' "$gate" | cksum | cut -d' ' -f1)"
+[ "$now" = "$pin" ]; check "claimre is frozen at its ruled size (cksum pin)" 0 "$?"
+rm -rf "$fp"
 
 if [ "$fails" -eq 0 ]; then echo "all checks pass ($checks)"; else echo "$fails check(s) FAILED of $checks"; fi
 exit "$fails"

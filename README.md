@@ -7,8 +7,8 @@
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-1f6feb?style=flat-square" alt="License: MIT">
-  <img src="https://img.shields.io/badge/version-1.0.0-8250df?style=flat-square" alt="Version 1.0.0">
-  <img src="https://img.shields.io/badge/tests-19%20suites-3fb950?style=flat-square" alt="Tests: 19 suites">
+  <img src="https://img.shields.io/badge/version-1.1.0-8250df?style=flat-square" alt="Version 1.1.0">
+  <img src="https://img.shields.io/badge/tests-23%20suites-3fb950?style=flat-square" alt="Tests: 23 suites">
   <img src="https://img.shields.io/badge/routing%20eval-24%2F25-d29922?style=flat-square" alt="Routing eval: 24 of 25">
 </p>
 
@@ -49,7 +49,7 @@ What superstack does about them: the goal and the stopping point ride in files o
 
 **How you know it's working:** your next session in any project opens with one `superstack:` line (a fresh workspace gets a one-time overlay offer). Type an idea-shaped prompt like "create a mario game in a single html document" in an empty folder and the front door offers to shape it first. `/superstack:superstack-status` reports the workspace record any time.
 
-**Requirements:** Claude Code with plugin support; Bash, git, `jq`, and standard POSIX tools; a capable model at medium-or-higher effort. Hooks are shell scripts, tested on macOS, Linux, and Windows (under Git Bash) in CI on every push; on native Windows install Git Bash and `jq` first, and WSL behaves like Linux.
+**Requirements:** Claude Code with plugin support; Bash, git, `jq`, the `claude` CLI on PATH (the self-check suites call its validator), and standard POSIX tools; a capable model at medium-or-higher effort. Hooks are shell scripts, tested on macOS, Linux, and Windows (under Git Bash) in CI on every push; on native Windows install Git Bash and `jq` first, and WSL behaves like Linux.
 
 > [!IMPORTANT]
 > `jq` is load-bearing: without it, the publish gate and the prompt-time door fail open, silently disabled while everything else keeps working. Install it to keep the whole safety layer armed.
