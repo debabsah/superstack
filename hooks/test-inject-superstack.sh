@@ -103,6 +103,48 @@ out="$(run startup)"
 check "an expired term does not surface"             '!superstack domain' "$out"
 rm -f "$tmp/repo/.superstack/domain.md"
 
+# -- D-74 M5: per-module muting — tune-down without uninstall ---------------
+# A muted module's own ambient line goes quiet, a summary line names the
+# muted set, comments-only files mute nothing, and the protected core
+# (kernel, execute, continuity) cannot be muted at all.
+printf -- '- V9 (2026-08-01) expected: x - check by 2020-01-01 - from: y\n' > "$tmp/repo/.superstack/value-log"
+out="$(run startup)"
+check "due prediction line present before muting"    "prediction(s) due" "$out"
+printf 'superstack-value\n' > "$tmp/repo/.superstack/muted"
+out="$(run startup)"
+check "a muted module's own ambient line goes quiet" '!prediction' "$out"
+check "the muted summary line appears"               "superstack muted: 1" "$out"
+printf '# a comment only\n\n' > "$tmp/repo/.superstack/muted"
+out="$(run startup)"
+check "a comments-only muted file mutes nothing"     "prediction(s) due" "$out"
+printf 'superstack-execute\n' > "$tmp/repo/.superstack/muted"
+out="$(run startup)"
+check "a protected core name never counts as muted"  '!superstack muted' "$out"
+rm -f "$tmp/repo/.superstack/muted" "$tmp/repo/.superstack/value-log"
+
+
+# -- D-74 M6: goal drift is CHECKED, not just shown -------------------------
+# Frontier movement vs work movement: the frontier hash unchanged across
+# session starts while HEAD moves builds a quiet count; at 2 the voice says
+# so; a frontier edit (camping) resets; an idle session holds the count.
+dr="$tmp/driftrepo"; git init -q -b main "$dr"; mkdir -p "$dr/.superstack/plans"
+( cd "$dr" && printf 'v1\n' > w.txt && git add w.txt && git -c user.email=t@t -c user.name=t commit -qm one )
+printf -- '<!-- plan: p status: ACTIVE -->\ngoal: the goal\nfrontier: M1 in-progress @ x\n' > "$dr/.superstack/plans/p.md"
+druns() { printf '{"source":"startup"}' | ( cd "$dr" && bash "$hook" 2>/dev/null ); }
+out="$(druns)"
+check "drift: first sighting seeds state, no line"    '!superstack drift' "$out"
+( cd "$dr" && printf 'v2\n' > w.txt && git add w.txt && git -c user.email=t@t -c user.name=t commit -qm two )
+out="$(druns)"
+check "drift: one quiet session, still no line"       '!superstack drift' "$out"
+( cd "$dr" && printf 'v3\n' > w.txt && git add w.txt && git -c user.email=t@t -c user.name=t commit -qm three )
+out="$(druns)"
+check "drift: two quiet sessions while work moved fires the line" "superstack drift" "$out"
+printf -- '<!-- plan: p status: ACTIVE -->\ngoal: the goal\nfrontier: M2 in-progress @ y\n' > "$dr/.superstack/plans/p.md"
+( cd "$dr" && printf 'v4\n' > w.txt && git add w.txt && git -c user.email=t@t -c user.name=t commit -qm four )
+out="$(druns)"
+check "drift: a frontier move (camping) resets"       '!superstack drift' "$out"
+out="$(druns)"
+check "drift: an idle session holds, does not fire"   '!superstack drift' "$out"
 
 # v0.3.1: co-installed estate seam line (D-2)
 mkdir -p "$tmp/repo/.godmode"

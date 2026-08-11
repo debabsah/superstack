@@ -16,7 +16,7 @@ Green tests prove the layer below. An artifact with a face gets *looked at* — 
 3. **Scope to the delta.** What changed visually gets looked at; the whole app does not — unless this is a first ship, which earns the full walk-through.
 4. **On a project that ships faces repeatedly, mint the experiential oracle row** (the overlay template has the shape) — a *named* looking step fires; an unnamed one gets skipped under momentum. That is the entire lesson of the failure class.
 
-A Stop hook (`gate-experiential.sh`) now asks for step 2 mechanically when the turn changed a file with a face and the ledger carries no sign of anyone having looked. It is a reminder, not the discipline: it knows a handful of extensions and nothing about whether what you saw was right.
+A turn-end hook (`gate-experiential.sh`) now asks for step 2 mechanically when the turn changed a file with a face and the ledger carries no sign of anyone having looked. It is a reminder, not the discipline: it knows a handful of extensions and nothing about whether what you saw was right.
 
 ## Checker-must-fail
 

@@ -43,6 +43,13 @@ cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null)"
 . "$(dirname "$0")/superstack-root.sh" 2>/dev/null
 root="$(superstack_root "$cwd" 2>/dev/null)"; [ -n "$root" ] || root="$cwd"
 
+# Per-module muting (D-74 M5): a workspace that muted the shaping module
+# gets no offer — the door's whole output is an offer to route there.
+if [ -f "$root/.superstack/muted" ] \
+   && grep -vE '^[[:space:]]*#' "$root/.superstack/muted" 2>/dev/null | tr -d ' ' | grep -qx 'superstack-inception'; then
+  exit 0
+fi
+
 # Shaping state on disk silences the door: an ACTIVE plan, any in-flight task
 # file, or a premises ledger. Overlay MEMORY (project.md, doctrine, logs) does
 # NOT count — a remembered workspace still deserves the door for a NEW idea.

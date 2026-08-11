@@ -209,6 +209,28 @@ if [ -d "$f/receipts" ]; then
   echo "receipts: $rn file(s) (emitted/attested, plus load and delegation logs)"
 fi
 
+# Goal drift (D-74 M6): the quiet count the SessionStart check maintains.
+if [ -f "$f/drift-state" ]; then
+  dq="$(sed -n 's/^quiet: //p' "$f/drift-state" 2>/dev/null)"; case "$dq" in ''|*[!0-9]*) dq=0;; esac
+  [ "$dq" -ge 1 ] && echo "drift: frontier unchanged across $dq active session start(s) while the work moved (the voice warns at 2; camping resets)"
+fi
+
+# Per-module muting (D-74 M5): the muted set is visible here, and a
+# protected-core name in the file is warned about rather than silently
+# ignored — the injector skips it either way, but a user who muted the
+# goal-carrier should learn why nothing changed.
+if [ -f "$f/muted" ]; then
+  mreal=""; mn=0
+  for m in $(grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$f/muted" 2>/dev/null | tr -d ' '); do
+    case "$m" in
+      superstack|superstack-execute|superstack-continuity)
+        echo "muted: protected and ignored: $m (the kernel, execute, and continuity carry the four ideas and cannot be muted)";;
+      *) mn=$((mn+1)); mreal="${mreal:+$mreal, }$m";;
+    esac
+  done
+  [ "$mn" -gt 0 ] && echo "muted: $mn module(s) ($mreal) — voices quiet, routing declined best-effort (.superstack/muted)"
+fi
+
 # Hook liveness (D-70): a workspace with real work whose record shows no
 # hook line EVER is probably running without the hooks — a state invisible
 # from inside a session, which is why the read-only doctor is the one to

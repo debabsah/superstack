@@ -95,4 +95,44 @@ mkrepo "$t/j"
 ( cd "$t/j" && bash "$M" --receipt minted.txt --files app.txt -- bash -c 'exit 3' ) >/dev/null 2>&1
 [ "$(gate "$t/j" 'Done. receipt: receipts/minted.txt')" = 2 ]; say $? "a failing-check receipt never vouches (caught)"
 grep -q FASTRED "$t/j/.superstack/gate-log" 2>/dev/null; say $? "the failing-check refusal leaves its audit row"
+
+## Battery three — adversarial staleness against the files-binding. The
+## hunt for what the binding cannot express, run mechanically so noticing
+## never depends on the owner's luck. Misses are the data.
+
+# A covered file renamed away: the surface moved, the receipt must stale.
+mkrepo "$t/k"; mint "$t/k"
+( cd "$t/k" && git mv app.txt moved.txt && git -c user.email=t@t -c user.name=t commit -qm rename )
+[ "$(gate "$t/k" 'Done. receipt: receipts/minted.txt')" = 2 ]; say $? "a covered file renamed away stales the receipt (caught)"
+
+# A new file landing in a covered DIRECTORY, untracked then committed.
+mkrepo "$t/l"
+( cd "$t/l" && mkdir sub && printf 'v1\n' > sub/a.txt && git add sub && git -c user.email=t@t -c user.name=t commit -qm sub )
+( cd "$t/l" && bash "$M" --receipt minted.txt --files sub -- true ) >/dev/null 2>&1
+printf 'new\n' > "$t/l/sub/new.txt"
+[ "$(gate "$t/l" 'Done. receipt: receipts/minted.txt')" = 2 ]; say $? "an untracked new file inside a covered directory stales it (caught)"
+( cd "$t/l" && git add sub/new.txt && git -c user.email=t@t -c user.name=t commit -qm newfile )
+[ "$(gate "$t/l" 'Done. receipt: receipts/minted.txt')" = 2 ]; say $? "the committed new file inside a covered directory stales it (caught)"
+
+# Change-then-revert: identical content is identical evidence — must stay
+# fresh, or the binding cries wolf.
+mkrepo "$t/m"; mint "$t/m"
+printf 'edited\n' > "$t/m/app.txt"
+( cd "$t/m" && git checkout -q -- app.txt )
+[ "$(gate "$t/m" 'Done. receipt: receipts/minted.txt')" = 0 ]; say $? "a change reverted to identical content stays fresh (no false stale)"
+
+# The typo class: a receipt bound to a path that never existed. Nothing
+# under the binding ever changes, so the receipt never stales — DOCUMENTED
+# LIMIT measured here: the binding vouches only for what it names, and a
+# typo names nothing.
+mkrepo "$t/n"
+( cd "$t/n" && bash "$M" --receipt minted.txt --files typo.txt -- true ) >/dev/null 2>&1
+( cd "$t/n" && printf 'v2\n' > app.txt && git add app.txt && git -c user.email=t@t -c user.name=t commit -qm change )
+[ "$(gate "$t/n" 'Done. receipt: receipts/minted.txt')" = 2 ]; say $? "a receipt bound to a nonexistent path goes stale on real change (documented limit: it never does)"
+
+# Amend after mint: the recorded revision becomes unreachable from HEAD's
+# first parent but still resolvable; the diff against HEAD is what counts.
+mkrepo "$t/o"; mint "$t/o"
+( cd "$t/o" && printf 'v2\n' > app.txt && git add app.txt && git -c user.email=t@t -c user.name=t commit -q --amend -m amended )
+[ "$(gate "$t/o" 'Done. receipt: receipts/minted.txt')" = 2 ]; say $? "an amend that changes a covered file stales the receipt (caught)"
 exit 0

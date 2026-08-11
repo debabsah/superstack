@@ -81,3 +81,47 @@ closed yet; the drill still fails.").
   ruling.
 - Recovery, staleness, and ceremony numbers are unchanged from the entry
   above; those scenarios did not move this milestone.
+
+## 2026-08-09 — after adoption-M2 (the watcher extensions)
+
+Three batteries grew; misses are the product's own numbered hunt results,
+not defects fixed silently (frozen grammars change by ruling only).
+
+- **Staleness battery three (adversarial, s3 now 19 rows, 16 caught).**
+  The files-binding is stronger than designed-for: a covered file renamed
+  away, a new file landing in a covered directory (untracked AND
+  committed), and an amend that changes covered content all stale the
+  receipt; a change reverted to identical content correctly stays fresh.
+  One documented limit found and numbered: a receipt bound to a
+  nonexistent path (the typo class) never stales — the binding vouches
+  only for what it names.
+- **Grant-tier battery (NEW s6, 14 rows).** Caught: the plain t3 verbs,
+  env-var prefixes, quoted forms inside bash -c, uppercase grant lines,
+  the consumed grant never vouching twice, the everyday one-bounce tier
+  intact. Escaped, numbered: the flag-between form for the t3 binaries
+  (gaps were widened for git/gh only, by ruling), the double-space form,
+  the wrapper script (standing accepted limit), and the one-letter-grant
+  substring weakness (a grant reading a single letter present in the
+  command vouches — grammar tuning data). One INFO by design: a consumed
+  grant copied back re-grants (any owner file-write is a grant).
+- **Claim-attack corpus (s4 now 15 attacks + 4 controls; 7 caught,
+  controls 4/4).** Two new escapes, both numbered: suppressor abuse (a
+  token failure clause appended to a completion claim triggers the MIXED
+  candour shield and silences the gate — queued as Q44) and the
+  fabricated citation inside a ledger sentence (the cite falls through,
+  the ledger wording passes — the format-not-truth boundary, measured).
+- Recovery and ceremony numbers unchanged; those scenarios did not move.
+
+## 2026-08-10 — tree at 3adfb3b (the adoption-M8 close; entries carry the tree hash from here on)
+
+- **Fresh full run at the closure audit's prompting: s3 is 17 pass / 2 miss
+  of 19 rows.** The typo-never-stales class the previous entry numbered as
+  an open limit now PASSES, and it is a product change, not an eval change:
+  the s3 script is untouched since 6a353dc, and the identical script run in
+  a worktree at 6a353dc reproduces 16/3 with the typo MISS present (closure
+  audit, 2026-08-10). What closed it is the M7 provider work's blind-binding
+  validation (a --files path git cannot see is refused at mint time).
+- **The lab suite now pins per-scenario assertion floors** (s3 19, s4 19,
+  s5 5, s6 14): existence of each battery, never its verdicts — misses stay
+  recorded data. Floors move by ruling, like the recorded numbers. Proven:
+  s6 gutted to one INFO line turns the suite red.

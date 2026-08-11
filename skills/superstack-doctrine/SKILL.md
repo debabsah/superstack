@@ -5,7 +5,7 @@ description: A correction or standing ruling from the user — a rebuke of a wor
 
 # superstack-doctrine
 
-Corrections become standing law, and the law gets surfaced where habits can't be trusted to remember it. Statutes live in two books, both surfaced by the SessionStart hook every session: the project's (`.superstack/doctrine.md`) and the owner's personal rule book (`${CLAUDE_CONFIG_DIR:-~/.claude}/superstack-doctrine.md`), which binds in every workspace (D-49).
+Corrections become standing law, and the law gets surfaced where habits can't be trusted to remember it. Statutes live in two books, both surfaced by the session-start hook every session: the project's (`.superstack/doctrine.md`) and the owner's personal rule book (`${CLAUDE_CONFIG_DIR:-~/.claude}/superstack-doctrine.md`), which binds in every workspace (D-49).
 
 **Scope at minting — this project, or everywhere?** A correction about how the owner is spoken to or how their preferences are honored is personal; one about this codebase's conduct is the project's. When the correction's own words don't settle it, ask, one line. Personal statutes append to the personal book, same grammar, same `# doctrine` header on first use. Where the two books collide inside a project, the project's statute outranks the personal one.
 

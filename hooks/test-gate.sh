@@ -599,6 +599,12 @@ check "stale receipt citation falls through and still bounces bare claims" 2 "$(
 grep -q "FASTSTALE" "$fp/.superstack/gate-log" 2>/dev/null; check "stale citation leaves its FASTSTALE row" 0 "$?"
 check "missing receipt citation with a ledger token still passes (fail-open)" 0 "$(run_in "$fp" false "Done. Verified: suite green. receipt: receipts/absent.txt")"
 grep -q "CITEMISS" "$fp/.superstack/gate-log" 2>/dev/null; check "missing citation leaves its CITEMISS row" 0 "$?"
+# D-72: the cite class legally contains dots, so a citation ending a
+# sentence glued the period onto the filename and a CURRENT receipt logged
+# CITEMISS — caught live on the gate's own author at a campaign closure.
+# One trailing period is stripped; interior dots keep working (the .txt
+# cites above are that pin).
+check "a sentence-final period does not corrupt the citation" 0 "$(run_in "$fp" false "Done. receipt: receipts/attested-fp.txt.")"
 # A workspace with no git commit has no head to be current against: the cited
 # receipt passes by the fail-open charter, and the row must say why (head=none),
 # or the lenient branch has silently widened into an unlogged bypass.
@@ -684,6 +690,7 @@ check "a cited receipt path with an M-number does not arm closure" 0 "$(run_in "
 mk "$user" "$filler"
 check "a non-mutating closure statement stays silent"              0 "$(run_in "$cb" false "M9 CLOSED on a light pass.")"
 mk "$user" "$edit" "$claimtxt"
+check "a closure cite ending the sentence still passes (D-72)"     0 "$(run_in "$cb" false "M9 CLOSED. receipt: receipts/emitted-cb.")"
 rm -rf "$cb"
 
 # The freeze (D-47): any widening of claimre goes red here first; a new stem

@@ -32,12 +32,29 @@ for s in s1-compaction-carry s2-session-death; do
   else ok "$s scores full marks on the real tree"; fi
 done
 
-# Smoke: the measurement scenarios run and report at least one assertion each.
-for s in s3-evidence-staleness s4-claim-attacks s5-ceremony; do
+# The measurement scenarios: each must report at least its recorded floor of
+# assertion rows. The floor pins the ROW COUNT of the battery, not its verdicts
+# (misses stay recorded data, never suite reds) — without it a scenario body
+# deleted down to one INFO line leaves every suite green while the class it
+# hunts goes unhunted. Floors move like the recorded numbers: by ruling.
+floor() { case "$1" in s3-evidence-staleness) echo 19;; s4-claim-attacks) echo 19;; s5-ceremony) echo 5;; s6-grant-attacks) echo 14;; *) echo 1;; esac; }
+for s in s3-evidence-staleness s4-claim-attacks s5-ceremony s6-grant-attacks; do
   out="$(bash "$lab/$s.sh" 2>/dev/null)"
-  if printf '%s' "$out" | grep -qE '^(PASS|MISS|INFO):'; then ok "$s runs and reports"
-  else no "$s produced no assertions"; fi
+  n="$(printf '%s' "$out" | grep -cE '^(PASS|MISS|INFO):')"
+  f="$(floor "$s")"
+  if [ "$n" -ge "$f" ]; then ok "$s reports $n assertion row(s) (floor $f)"
+  else no "$s reports $n assertion row(s), floor is $f — a shrunken battery is a deleted battery"; fi
 done
+
+# The newcomer instruments (adoption M3): this row proves PRESENCE only —
+# the method file exists and carries both rubric blocks. Frozenness (rubric
+# written before the run, never amended to fit one) is a process law this
+# grep cannot see; it is enforced by the method file's own amendment clause
+# and checked by the scoring audits, and the assertion says exactly what it
+# tests so a green here never overclaims.
+nc="$lab/../newcomer/README.md"
+if [ -f "$nc" ] && grep -q '^### R1' "$nc" && grep -q '^### N1' "$nc"; then ok "newcomer method file present with both rubric blocks"
+else no "newcomer method file missing or rubric-block-less (eval/newcomer/README.md)"; fi
 
 # The embedded drill: the lab must be able to see breakage. A stub hooks dir
 # whose pre-compact prints nothing must turn the carry scenario red.

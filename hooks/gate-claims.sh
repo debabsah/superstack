@@ -222,7 +222,10 @@ logline() {
 # path still judges the turn — and leaves its row, so fabricated and decayed
 # citations are audit data, not silent passes. No git head (bare fixture,
 # exported tree) keeps the fail-open charter: pass, and the row says why.
-cites="$(printf '%s' "$last" | grep -oE 'receipts/[A-Za-z0-9._-]+' | sort -u)"
+# The cite class legally contains dots (real receipt names carry them), so
+# a citation ending a sentence glues the period onto the filename — strip
+# ONE trailing dot (D-72); no reasonable receipt name ends in a bare dot.
+cites="$(printf '%s' "$last" | grep -oE 'receipts/[A-Za-z0-9._-]+' | sed 's/\.$//' | sort -u)"
 if [ -n "$cites" ]; then
   fpstate=pass
   for c in $cites; do

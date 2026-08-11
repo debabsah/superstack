@@ -31,6 +31,24 @@ out=""
 append() { [ -n "$1" ] && out="${out:+$out
 }$1"; }
 
+# Per-module muting (D-74 M5): .superstack/muted, one module name per line,
+# #-comments allowed — an owner/user file-write, the grant-file precedent.
+# A muted module's own ambient line goes quiet and a summary line names the
+# set. The PROTECTED CORE is never muteable: the kernel, execute, and
+# continuity carry the four ideas, and muting the goal-carrier would
+# un-product the product — protected names are ignored here and the doctor
+# warns about them. The gates are NOT covered: the spine has its own knob
+# (SUPERSTACK_GATES), and muting is for bench modules only.
+mutedf="$root/.superstack/muted"
+mutedlist=""
+if [ -f "$mutedf" ]; then
+  mutedlist="$(grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$mutedf" 2>/dev/null | tr -d ' \t' | tr '\n' ' ')"
+fi
+is_muted() { # protected core never counts
+  case " $1 " in " superstack "|" superstack-execute "|" superstack-continuity ") return 1;; esac
+  case " $mutedlist" in *" $1 "*) return 0;; *) return 1;; esac
+}
+
 # ACTIVE plan (execute module): surface slug + goal + frontier, and make the
 # module required reading the deterministic way rather than a remembered rule.
 # Rationale: DECISIONS.md D-9. Composed FIRST because the goal is the one line
@@ -47,6 +65,27 @@ if [ -d "$pd" ]; then
     goal="$(grep -m1 '^goal:' "$pf" 2>/dev/null | sed -E 's/^goal: *//' | cut -c1-120 | tr -d '[:cntrl:]')"
     fr="$(grep -m1 '^frontier:' "$pf" 2>/dev/null | cut -c1-160 | tr -d '[:cntrl:]')"
     append "superstack execute: plan ${slug:-unnamed} ACTIVE — goal: ${goal:-not recorded — add a goal: line to the plan header} — ${fr:-frontier unreadable — add a frontier: line to the plan} — superstack-execute is required reading before any build action."
+    # Goal drift, CHECKED not just shown (D-74 M6): the record's indictment
+    # was that a wake line whose frontier drifted three milestones reads
+    # identically to one that has not. The checkable signal: the frontier
+    # hash unchanged across session starts while HEAD moves. Camping edits
+    # the frontier, so camping IS the reset; an idle session (head
+    # unchanged) holds the count rather than inflating it. Warn never
+    # block; fail-open on any unwritable state; goal machinery is
+    # protected core, so this is deliberately not muteable.
+    ds="$root/.superstack/drift-state"
+    fh="$(printf '%s%s' "$slug" "$fr" | cksum | cut -d' ' -f1)"
+    nh="$(git -C "$root" rev-parse --short HEAD 2>/dev/null)"; [ -n "$nh" ] || nh=none
+    pfh="$(sed -n 's/^frontier: //p' "$ds" 2>/dev/null)"
+    ph="$(sed -n 's/^head: //p' "$ds" 2>/dev/null)"
+    pq="$(sed -n 's/^quiet: //p' "$ds" 2>/dev/null)"; case "$pq" in ''|*[!0-9]*) pq=0;; esac
+    if [ -z "$pfh" ]; then q=0
+    elif [ "$fh" != "$pfh" ]; then q=0
+    elif [ "$nh" != "$ph" ] && [ "$nh" != none ]; then q=$((pq+1))
+    else q=$pq
+    fi
+    printf 'frontier: %s\nhead: %s\nquiet: %s\n' "$fh" "$nh" "$q" > "$ds" 2>/dev/null || true
+    [ "$q" -ge 2 ] && append "superstack drift: the frontier has not moved across $q session starts while the work moved — the goal line above may be stale ground truth; re-read it, then camp (move the frontier) or correct the plan."
     break
   done
 fi
@@ -102,13 +141,13 @@ if [ -f "$sg" ]; then
   n="$(grep -c '^- G' "$sg" 2>/dev/null)" || n=0
   c="$(grep -c '^- G.*\[closed' "$sg" 2>/dev/null)" || c=0
   open=$(( n - c ))
-  [ "$open" -gt 0 ] && append "superstack autonomy: $open open skipped gate(s) — close or re-authorize (.superstack/skipped-gates.md)."
+  is_muted superstack-autonomy || { [ "$open" -gt 0 ] && append "superstack autonomy: $open open skipped gate(s) — close or re-authorize (.superstack/skipped-gates.md)."; }
 fi
 
 # value-log: open predictions whose check-by date has passed (ISO dates
 # compare lexicographically; malformed lines simply never count — fail-open).
 vl="$root/.superstack/value-log"
-if [ -f "$vl" ]; then
+if [ -f "$vl" ] && ! is_muted superstack-value; then
   today="$(date +%Y-%m-%d)"
   due="$(grep '^- V' "$vl" 2>/dev/null | grep -v '\[HELD\|\[MISSED' | sed -n 's/.*check by \([0-9-]*\).*/\1/p' | awk -v t="$today" '$0 != "" && $0 <= t' | wc -l | tr -d ' ')"
   [ "${due:-0}" -gt 0 ] && append "superstack value: $due prediction(s) due — settle HELD/MISSED (.superstack/value-log)."
@@ -117,7 +156,7 @@ fi
 # queue: open parked items; oldest = first open entry's date (append order).
 # Open = no closure annotation ([taken/[dropped/[retired/[resolved/[reshaped).
 qf="$root/.superstack/queue.md"
-if [ -f "$qf" ]; then
+if [ -f "$qf" ] && ! is_muted superstack-queue; then
   openq="$(grep '^- Q' "$qf" 2>/dev/null | grep -v '\[taken\|\[dropped\|\[retired\|\[resolved\|\[reshaped')"
   if [ -n "$openq" ]; then
     qn="$(printf '%s\n' "$openq" | wc -l | tr -d ' ')"
@@ -135,6 +174,16 @@ if [ -f "$dmf" ]; then
   dtoday="$(date +%Y-%m-%d)"
   dlive="$(grep '^- ' "$dmf" 2>/dev/null | grep '\[ack: ' | awk -v t="$dtoday" '{ if (match($0, /\[expires: *[0-9-]+\]/)) { d = substr($0, RSTART + 10, 10); gsub(/[^0-9-]/, "", d); if (d <= t) next } print }' | wc -l | tr -d ' ')"
   [ "${dlive:-0}" -gt 0 ] && append "superstack domain: $dlive term(s) ack'd — .superstack/domain.md is the glossary (entries without an owner ack are proposals)."
+fi
+
+# The muted summary: count only the entries that actually mute (protected
+# names never count), name them, point at the file. One line, content-free.
+if [ -n "$mutedlist" ]; then
+  mn=0; mnames=""
+  for m in $mutedlist; do
+    if is_muted "$m"; then mn=$((mn+1)); mnames="${mnames:+$mnames, }$m"; fi
+  done
+  [ "$mn" -gt 0 ] && append "superstack muted: $mn module(s) — $mnames — their voices are quiet and sessions are asked not to route there (.superstack/muted)."
 fi
 
 # Task lines land LAST (S2): the goal says what the work is FOR; where each

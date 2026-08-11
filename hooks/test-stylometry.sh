@@ -7,7 +7,7 @@
 set -u
 root="$(cd "$(dirname "$0")/.." && pwd)"
 pass=0; fail=0
-for f in README.md CHANGELOG.md .claude-plugin/plugin.json .claude-plugin/marketplace.json; do
+for f in README.md CHANGELOG.md .claude-plugin/plugin.json .claude-plugin/marketplace.json adapters/README.md; do
   hits="$(grep -n $'—\|–' "$root/$f" 2>/dev/null || true)"
   if [ -z "$hits" ]; then
     pass=$((pass+1)); echo "PASS: $f is dash-free"

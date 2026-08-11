@@ -7,8 +7,8 @@
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-1f6feb?style=flat-square" alt="License: MIT">
-  <img src="https://img.shields.io/badge/version-2.0.0-8250df?style=flat-square" alt="Version 2.0.0">
-  <img src="https://img.shields.io/badge/tests-25%20suites-3fb950?style=flat-square" alt="Tests: 25 suites">
+  <img src="https://img.shields.io/badge/version-2.1.0-8250df?style=flat-square" alt="Version 2.1.0">
+  <img src="https://img.shields.io/badge/tests-30%20suites-3fb950?style=flat-square" alt="Tests: 30 suites">
   <img src="https://img.shields.io/badge/routing%20eval-24%2F25-d29922?style=flat-square" alt="Routing eval: 24 of 25">
 </p>
 
@@ -41,10 +41,10 @@ And a long tail of the same problem at every other stage of delivery: shaping a 
 
 Everything superstack does exists to keep four things true on disk, where the next session can read them:
 
-- **Your goal.** What the work is for and exactly where it stopped ride in a plan file, written while the work happens, so a cold start or a compaction reads the goal back instead of guessing it. Plans stay light on purpose (the goal, each milestone's done-when, and your rulings) because a capable model builds better adapting on the fly than following a step list written on day one.
+- **Your goal.** What the work is for and exactly where it stopped ride in a plan file, written while the work happens, so a cold start or a compaction reads the goal back instead of guessing it. The goal is also checked, not just shown: when the recorded stopping point sits still across sessions while the commits keep moving, the session-start voice says so. Plans stay light on purpose (the goal, each milestone's done-when, and your rulings) because a capable model builds better adapting on the fly than following a step list written on day one.
 - **Your state.** The workspace grows a plain-text record (`.superstack/`) as a side effect of working: in-flight tasks, campaigns, parked ideas, predictions, walkthrough history. No handoff files to write, no session summaries to trust.
 - **Your rules.** A correction you give once becomes standing doctrine, read back at every session start and binding until you lift it: Tuesday's "never touch that table" still holds on Thursday, in every session, after every compaction.
-- **Your evidence.** A "done" carries proof or it bounces. Receipts record checks that actually ran, expire by themselves the moment the code under them changes, and a campaign cannot claim a milestone closed without its receipt current.
+- **Your evidence.** A "done" carries proof or it bounces. Receipts record checks that actually ran, expire by themselves the moment the code under them changes, and a campaign cannot claim a milestone closed without its receipt current. Proof from outside tools counts too: name a browser or test runner in a one-line provider row in `.superstack/providers`, and superstack runs that tool itself and writes the receipt from what it saw, never from memory.
 
 The rest of this page is the machinery that keeps those four true: [a deterministic spine](#the-deterministic-spine) of shell hooks that fire whether or not a skill loads, and [a bench of specialists](#the-specialist-bench) for each stage of the work.
 
@@ -56,12 +56,38 @@ The rest of this page is the machinery that keeps those four true: [a determinis
 /reload-plugins
 ```
 
+<details>
+<summary>On GitHub Copilot CLI (the always-on layer)</summary>
+
+```text
+git clone https://github.com/debabsah/superstack && cd superstack
+bash adapters/copilot-cli/install.sh
+```
+
+This writes `~/.copilot/hooks/superstack.json`; delete it to uninstall. You get the session-start briefing, the shaping offer, the publish gate, and both turn-end gates; the compaction carrier and the 25 skills don't carry over there. Per-host detail: [`adapters/README.md`](adapters/README.md).
+
+</details>
+
+<details>
+<summary>On OpenAI Codex CLI (the always-on layer plus all 25 skills)</summary>
+
+```text
+git clone https://github.com/debabsah/superstack && cd superstack
+bash adapters/codex-cli/install.sh
+mkdir -p ~/.agents/skills && ln -sf "$PWD/skills/"* ~/.agents/skills/
+```
+
+The installer writes `~/.codex/hooks.json` and refuses to touch a hooks file you already keep; approve the hooks once inside a Codex session (its `/hooks` command). The last line links the skills where Codex reads them; skill routing there is best-effort. Uninstall by deleting the hooks file and the links. Per-host detail: [`adapters/README.md`](adapters/README.md).
+
+</details>
+
 **How you know it's working:** your next session in any project opens with one `superstack:` line (a fresh workspace gets a one-time overlay offer). Type an idea-shaped prompt like "create a mario game in a single html document" in an empty folder and the front door offers to shape it first. `/superstack:superstack-status` reports the workspace record any time.
 
 **Requirements:** Claude Code with plugin support; Bash, git, `jq`, the `claude` CLI on PATH (the self-check suites call its validator), and standard POSIX tools; a capable model at medium-or-higher effort. Hooks are shell scripts, tested on macOS, Linux, and Windows (under Git Bash) in CI on every push; on native Windows install Git Bash and `jq` first, and WSL behaves like Linux.
 
 > [!IMPORTANT]
 > `jq` is load-bearing: without it, the publish gate and the prompt-time door fail open, silently disabled while everything else keeps working. Install it to keep the whole safety layer armed.
+
 
 <details>
 <summary>From a local clone (also how you run the test suites)</summary>
@@ -95,7 +121,7 @@ Six shell hooks run no matter what the model loads or forgets:
 - **The claims gate.** A turn that changed things cannot end on a bare "done"; bounced once until the claim carries its `Verified:` / `Assumed:` / `PROVISIONAL` ledger, or until it cites a receipt, which vouches only while it is fresh: a receipt bound to files expires by itself the moment a covered file changes, and one recording a failing run never vouches. A claim of a closed campaign or milestone is stricter: it passes only on a current receipt, never on wording.
 - **The look gate.** Change a file with a face (`.html`, `.tsx`, `.css`, and so on), claim done on logic-only evidence, and it asks once whether anybody actually looked.
 - **The publish gate.** `git push`, `gh pr create`/`merge`, releases, `npm publish`, `docker push`, and `terraform`/`kubectl apply` are held until a fresh sweep receipt exists. The sweep checks the outgoing delta for secrets (fail-closed), AI-authorship traces, confidential terms, and stale public claims; receipts expire after an hour.
-- **The session-start voice.** The goal, standing law, open questions, and parked work under a single line budget. The goal composes first and survives longest; when the budget forces a drop, the drop is announced, never silent.
+- **The session-start voice.** The goal, standing law, open questions, and parked work under a single line budget. The goal composes first and survives longest; when the budget forces a drop, the drop is announced, never silent. It also runs the drift check: a stopping point that has not moved across session starts while the work moved gets called out as possibly stale ground truth.
 - **The compaction carrier.** The plan's goal and frontier survive compaction, sanitized on the way through.
 
 Every gate bounces once and logs, and outside the destructive publish tier an identical retry passes. That is deliberate: a gate that can trap a session is a worse failure than one you can override, so an override is always available and always lands in the log where you can see it. The destructive tier of the publish gate asks for one thing more: for `terraform`/`kubectl apply`, `docker push`, and the package-registry publishes, you approve the retry by writing a one-line grant file (`printf 'grant: npm publish\n' > .superstack/outward-grant`); the gate consumes the grant on use and logs it. The grant records your authorization. It is not access control, none of the gates are, and `SUPERSTACK_GATES=off` silences all of them.
@@ -199,6 +225,8 @@ The paper trail builds up as a side effect of the work; nobody has to remember t
 One deliberate exception: `superstack-decide` offers (never silently creates) a committed `docs/decisions/` directory, because decision records must survive machines and teammates.
 
 **Local and inspectable.** The hooks are plain shell on your machine and call no network service; read them in [`hooks/`](hooks/), where the test suites live beside them. Installing and uninstalling touches nothing of yours except one `.superstack/` ignore rule. The routing eval, with its method and recorded run, is in [`eval/routing/`](eval/routing/), and the survival scenarios (a compaction, a session death, a stale receipt, a fabricated claim, each proven caught by a check you can read, with the baseline numbers and the recorded misses beside them) are in [`eval/scenarios/`](eval/scenarios/).
+
+**Tune it down.** You can quiet the parts of the bench you don't use without uninstalling anything: list module names in `.superstack/muted`, one per line, and each listed module's session-start line goes quiet while sessions are asked not to route there (the same best-effort as routing itself; the status report shows what's muted). The gates are not covered by muting; they keep their own `SUPERSTACK_GATES` knob. Three things cannot be muted because they carry the four ideas: the method kernel, the campaign runner (`superstack-execute`), and the resume ritual (`superstack-continuity`).
 
 **Uninstall:** `/plugin uninstall superstack@superstack`. Your `.superstack/` directories and the ignore rule stay where they are; they're your files.
 

@@ -71,3 +71,8 @@ model id where arms ran.
 - **Model-arm numbers are prompt-side simulations** of ambient cost (the
   same class of limitation as the routing eval's listing-only caveat) and
   carry single-run variance; re-run before quoting.
+
+A constraint carried from the market-evidence pass (2026-08-09): the
+deterministic rows above are the primary instrument on purpose — a
+same-family model judging its own family is the wrong counterfactual, so
+the model arms stay supplementary and their numbers are never the headline.

@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.1.0 (2026-08-10)
+
+superstack now runs beyond Claude Code: two host adapters carry the
+always-on layer to GitHub Copilot CLI and OpenAI Codex CLI, and on
+Codex the full skill bench loads too.
+
+- **Host adapters**: `adapters/copilot-cli/` and `adapters/codex-cli/`
+  each install with one script, and the README teaches both installs
+  beside the Claude Code install. A per-host capability matrix
+  (`adapters/README.md`) states exactly what runs on each host, and a
+  cell says yes only after the behavior was observed in a live session
+  there; the limits sit beside the yes cells, plainly: no compaction
+  carrier on Copilot, skill routing unmeasured on Codex.
+- **A cross-harness neutrality check** fails the build if skill prose
+  names any host's internal events or tools, keeping the core portable
+  by construction.
+- **Per-module muting**: list module names in `.superstack/muted` and
+  each listed module's session-start line goes quiet while sessions are
+  asked not to route there; the status report shows the muted set. The
+  method kernel, the campaign runner, and the resume ritual cannot be
+  muted.
+- **The goal is checked, not just shown**: when the recorded stopping
+  point sits still across sessions while the commits keep moving, the
+  session-start voice says the goal line may be stale ground truth.
+- **Evidence from outside tools**: name a browser in a one-line provider
+  row in `.superstack/providers` and superstack runs the tool itself,
+  writing the receipt from what it observed; browser proving works end
+  to end on Chrome headless. Fifteen adversarial audit rounds hardened
+  the row grammar and the receipt writer before this shipped.
+- **Suites 25 to 30**, the adapter suites and a commit-hygiene guard
+  among them. Attack rows whose weapons Windows cannot forge (symlinks,
+  read-only directory bits) now skip visibly there instead of failing
+  falsely; the macOS and Linux runners keep every row.
+
 ## 2.0.0 (2026-08-09)
 
 Evidence that maintains itself, closures that need their artifacts, a

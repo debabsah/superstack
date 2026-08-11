@@ -20,7 +20,7 @@ When the work's justification is an expected outcome, append one bullet to `.sup
 - Inception's demand premises become predictions when the build ships — the premise ledger already wrote the observable; date it and log it.
 - One line per shipped outcome-claim; work with no outcome claim gets no entry (do not manufacture predictions to look instrumented).
 
-## Settling (when the SessionStart line says due)
+## Settling (when the session-start line says due)
 
 For each due entry: check the observable — the real number, the real behavior, asking the user when the evidence is theirs — and append the verdict to the line:
 

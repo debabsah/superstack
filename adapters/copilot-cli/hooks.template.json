@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "SessionStart": [
+      { "type": "command", "bash": "bash '__SUPERSTACK_ROOT__/adapters/copilot-cli/shim.sh' SessionStart", "timeoutSec": 15 }
+    ],
+    "UserPromptSubmit": [
+      { "type": "command", "bash": "bash '__SUPERSTACK_ROOT__/adapters/copilot-cli/shim.sh' UserPromptSubmit", "timeoutSec": 15 }
+    ],
+    "PreToolUse": [
+      { "type": "command", "matcher": "Bash|bash|shell", "bash": "bash '__SUPERSTACK_ROOT__/adapters/copilot-cli/shim.sh' PreToolUse", "timeoutSec": 15 }
+    ],
+    "Stop": [
+      { "type": "command", "bash": "bash '__SUPERSTACK_ROOT__/adapters/copilot-cli/shim.sh' Stop", "timeoutSec": 30 }
+    ]
+  }
+}

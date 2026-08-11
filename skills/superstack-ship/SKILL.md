@@ -11,7 +11,7 @@ The report is part of the work, not an afterthought. Ship a **calibrated** claim
 
 - **Answer first**, then the support. Lead with the verdict (done / not done / exact / blocked) in the first line; put evidence underneath, never above.
 - **Scale the report to the tier.** T1 = the verdict, its `Verified:` line(s), and the tier line — a few lines, not a document. The full shape here is for T2+.
-- **Separate verified from assumed, out loud — as the method's ledger** (canonical shapes: the method skill's ledger section; same tokens every report, and the Stop-hook gate greps for them). Never let an `Assumed:` line read like a `Verified:` one.
+- **Separate verified from assumed, out loud — as the method's ledger** (canonical shapes: the method skill's ledger section; same tokens every report, and the turn-end claims gate greps for them). Never let an `Assumed:` line read like a `Verified:` one.
 - **Cite specifics:** paths, counts, `file:line`, the command you ran, the number you saw, before→after deltas.
 - **Report what you observed, not what you intended.** If a step was skipped or a test failed, say so with the output.
 - **Calibrate "done" with a use-boundary.** Stamp unproven results **PROVISIONAL** ("do not quote these yet") and lift it explicitly only when the check passed. Scope the claim to exactly what the check covered; put the rest in a visible residual list.
@@ -31,11 +31,11 @@ If `.superstack/project.md` exists, **fold in what this task confirmed** — dur
 **Keep the calibration record — durable writes first, the destructive one last.** These steps have exactly one safe order, and it is not the order they occur to you in:
 
 1. **Append** every `Verified:` line from the final report to `.superstack/claims-log` (`date · claim · command-or-receipt`) — this is what `superstack-debug` falsifies against when a vouched-for behavior later breaks.
-2. **Route** undischarged `Assumed:`/`PROVISIONAL` lines to `.superstack/residuals.md` (the SessionStart hook surfaces the open count until they're discharged).
+2. **Route** undischarged `Assumed:`/`PROVISIONAL` lines to `.superstack/residuals.md` (the session-start hook surfaces the open count until they're discharged).
 3. **Fold** what this task confirmed into the overlay.
 4. **Only then, retire the task file** (`.superstack/tasks/<slug>.md`) — promote surviving decisions into the project's committed decision records (`docs/decisions/`, if the project keeps them) or the overlay, and durable facts into the overlay or the project's own docs, then delete it. An in-flight pointer that outlives the work is a lie the next session inherits. An ACTIVE plan is not yours to retire: a campaign closes through superstack-execute's closure, which runs steps 1–3 here itself.
 
-The task file is the transaction's commit record: while it exists, an interrupt is recoverable — you re-read it and redo the steps. Delete it first and an interrupt destroys the `Assumed:` list with no trace, SessionStart reports *nothing open*, and the run reads as a clean finish. A silent false-clean is the worst state this record can reach, and step order is the whole defence.
+The task file is the transaction's commit record: while it exists, an interrupt is recoverable — you re-read it and redo the steps. Delete it first and an interrupt destroys the `Assumed:` list with no trace, the session-start voice reports *nothing open*, and the run reads as a clean finish. A silent false-clean is the worst state this record can reach, and step order is the whole defence.
 
 **Never trim `residuals.md`.** An open residual is an obligation, not a log line — trimming by length discharges the oldest unverified assumptions, which are precisely the ones most likely to have rotted, and silences the only counter that nags about them. If it is pushing a page, that is a finding to report, not a file to shorten. **`claims-log`: archive, never truncate** — move aged lines to `.superstack/claims-log.<year>` (`superstack-status` and `superstack-debug` read the archives too). A deleted `Verified:` is a claim that can never be falsified, and the record of your own bounces is not yours to prune. `gate-log` needs nothing from you: it rotates itself in the hook, because expiry belongs in the deterministic half rather than in a habit.
 

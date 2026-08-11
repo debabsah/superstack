@@ -21,7 +21,7 @@ Append to `.superstack/queue.md`:
 
 ## Choose (starting fresh work)
 
-Read the queue before scoping something new. Choosing *against* it is fine — but conscious: if the new work outranks every parked item, that's information; say so in one line. **The human owns priority (R6): the queue records and reminds — it never ranks, never nags beyond its one SessionStart line.**
+Read the queue before scoping something new. Choosing *against* it is fine — but conscious: if the new work outranks every parked item, that's information; say so in one line. **The human owns priority (R6): the queue records and reminds — it never ranks, never nags beyond its one session-start line.**
 
 ## Resolution and expiry
 

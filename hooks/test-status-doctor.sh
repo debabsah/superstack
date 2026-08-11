@@ -120,6 +120,22 @@ check "unacked entries counted as proposals"         "1 proposal" "$out"
 check "expired entries counted apart"                "1 expired" "$out"
 check "review-yield rows reported"                   "review-yield: 1 row" "$out"
 
+# -- D-74 M5: the muted set is visible, and the protected core is defended --
+printf 'superstack-value\nsuperstack-execute\n' > "$sdg/muted"
+out="$( cd "$dg" && bash "$doctor" 2>&1 )"
+check "muted set reported with its one real entry"   "muted: 1 module" "$out"
+check "protected core listed as muted is warned"     "protected and ignored: superstack-execute" "$out"
+rm -f "$sdg/muted"
+
+# -- D-74 M6: the drift state is visible ------------------------------------
+printf 'frontier: 12345\nhead: abc1234\nquiet: 2\n' > "$sdg/drift-state"
+out="$( cd "$dg" && bash "$doctor" 2>&1 )"
+check "drift state reported when quiet"              "drift: frontier unchanged across 2" "$out"
+rm -f "$sdg/drift-state"
+out="$( cd "$dg" && bash "$doctor" 2>&1 )"
+if printf '%s' "$out" | grep -q '^drift:'; then fail=$((fail+1)); echo "FAIL: drift line shown with no drift state"
+else pass=$((pass+1)); echo "PASS: no drift line without state"; fi
+
 echo
 if [ "$fail" -eq 0 ]; then echo "all checks pass ($pass)"; exit 0
 else echo "$fail check(s) FAILED ($pass passed)"; exit 1; fi

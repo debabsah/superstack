@@ -6,10 +6,10 @@
 # file is excluded so the pattern list can live here.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"; root="$here/.."
-terms='superpowers|gstack|cross-family|teardown|blind report|GPT'
+terms='superpowers|gsd-core|caveman|mattpocock|gstack|cross-family|teardown|blind report|GPT'
 fail=0
 hits="$(cd "$root" && grep -rniIE "$terms" \
-  .claude-plugin .github agents assets eval hooks scripts skills \
+  .claude-plugin .github adapters agents assets eval hooks scripts skills \
   CHANGELOG.md README.md LICENSE 2>/dev/null \
   | grep -v 'hooks/test-teardown-privacy.sh')"
 if [ -n "$hits" ]; then

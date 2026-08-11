@@ -2,7 +2,7 @@
 
 Copy this shape into `<workspace>/.superstack/project.md` (git-ignored). It is the method's durable memory *for one project*: keep it **thin and pointer-first** (point to the project's own canonical docs for facts they own; never snapshot volatile values), and let it **evolve** — auto-add confirmed durable facts and gotchas, announce changes, and compact when it sprawls past a page (`superstack-ship` checks).
 
-**The first line MUST be a one-line HTML-comment pointer** (the SessionStart hook injects it as ambient context):
+**The first line MUST be a one-line HTML-comment pointer** (the session-start hook injects it as ambient context):
 
 ```
 <!-- pointer: <project> — oracle: <how "correct" is checked here>. Canonical docs: <where truth lives>. Full profile: .superstack/project.md -->
@@ -34,9 +34,9 @@ Rules of thumb:
 - An oracle row records **what pass literally prints**, not just the command — exit 0 with `3 skipped` is not the pass you meant. Note runtime when it changes strategy (`~20min` beside a slow suite) — cheapest-probe-first needs to know.
 - **An artifact with a face gets an experiential row.** When the claim type is "it renders / reads / is usable" (a UI, dashboard, chart, docs page), the row's command is a *looking step* — `open <url> / screenshot / click <flow>` — and "what pass literally prints" is what you literally see (`12 bars, legible in dark mode`). Tests prove the layer below; a named looking step fires, an unnamed one gets skipped under momentum.
 - Stamp oracle rows and gotchas with a **last-confirmed date**; ~90 days unconfirmed → demote to *Working assumptions* until re-checked. Expire toward doubt; confident rot is worse than a gap.
-- The Stop-hook gate writes `.superstack/gate-log` beside this file; recurring bounces are a gotcha about working habits — log them like any other trap.
-- **In-flight tasks** live beside this file too: one `.superstack/tasks/<slug>.md` per multi-session task, first line `<!-- task: <slug> — goal: <what this is for> — next: <action> -->` (the SessionStart hook surfaces it every session). Opened by superstack-scope; a decision record appended at each re-decide; retired by superstack-ship — promote the durables, delete the file.
+- The turn-end claims gate writes `.superstack/gate-log` beside this file; recurring bounces are a gotcha about working habits — log them like any other trap.
+- **In-flight tasks** live beside this file too: one `.superstack/tasks/<slug>.md` per multi-session task, first line `<!-- task: <slug> — goal: <what this is for> — next: <action> -->` (the session-start hook surfaces it every session). Opened by superstack-scope; a decision record appended at each re-decide; retired by superstack-ship — promote the durables, delete the file.
 - **`.superstack/residuals.md` has a grammar, because two counters parse it.** One `- ` bullet per open obligation:
   `- <date> (<version>) Assumed: <what couldn't be checked> — why — discharge: <what would settle it>`
-  (or `PROVISIONAL:` in place of `Assumed:`). The SessionStart hook and `superstack-status` count **bullet lines carrying a token** — so the file's header may name the tokens freely, and prose that merely *mentions* one is not an obligation. Write an open residual as a bullet or it will not be counted.
+  (or `PROVISIONAL:` in place of `Assumed:`). The session-start hook and `superstack-status` count **bullet lines carrying a token** — so the file's header may name the tokens freely, and prose that merely *mentions* one is not an obligation. Write an open residual as a bullet or it will not be counted.
 - Keep it to roughly a page. When it sprawls, that's the signal to compact (dedup, retire stale, point instead of inline).

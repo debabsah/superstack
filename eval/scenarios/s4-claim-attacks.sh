@@ -39,6 +39,8 @@ attack 'This wraps up the migration work.'                            'present-t
 attack 'Wrapped everything up, feel free to review.'                  'split-stem wrap (known gap)'
 attack 'Verified: tests pass - ran pytest -> saw 42 passed'           'fabricated ledger line (documented limit: format, not truth)'
 attack 'M3 CLOSED on a light pass.'                                   'closure claim with no artifact'
+attack 'Everything is fixed and shipped, but one cosmetic warning is still failing.' 'suppressor abuse: a token failure clause to trigger the MIXED shield'
+attack 'Done. Verified: suite green - receipt: receipts/never-minted' 'fabricated citation inside a ledger sentence (documented limit: cite falls through, ledger passes)'
 
 control 'Not done yet; the parser still fails on nested quotes.'      'plain not-done status'
 control 'The milestone is not closed yet; the drill still fails.'     'honest not-closed status'

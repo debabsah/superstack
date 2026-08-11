@@ -1,0 +1,20 @@
+{
+  "description": "superstack adapter for Codex CLI (adapters/codex-cli). Managed by install.sh; reinstalling refreshes this file.",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/hooks/inject-superstack.sh'", "timeout": 15 } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/hooks/front-door.sh'", "timeout": 15 } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/hooks/outward-sweep.sh'", "timeout": 15 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/adapters/codex-cli/stop-shim.sh'", "timeout": 30 } ] }
+    ],
+    "PreCompact": [
+      { "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/hooks/pre-compact.sh'", "timeout": 15 } ] }
+    ]
+  }
+}

@@ -24,6 +24,11 @@ check() { # desc want_exit want_offer(y/n) prompt dir [env]
 
 # -- bare workspace: the door's home ground ---------------------------------
 mkdir -p "$tmp/bare"; git init -q -b main "$tmp/bare"
+
+# -- D-74 M5: a workspace that muted inception gets no offer ----------------
+mkdir -p "$tmp/mutedws/.superstack"; git init -q -b main "$tmp/mutedws"
+printf 'superstack-inception\n' > "$tmp/mutedws/.superstack/muted"
+check "muted inception silences the door"            0 n "create a mario game in a single html document" "$tmp/mutedws"
 check "session-1 shaped prompt gets the offer"      0 y "Build me a small local web dashboard that reads the git history of my projects" "$tmp/bare"
 check "README's own example gets the offer"          0 y "create a mario game in a single html document" "$tmp/bare"
 check "i-have-an-idea gets the offer"                0 y "I have an idea for a plugin that tracks my reading list" "$tmp/bare"
