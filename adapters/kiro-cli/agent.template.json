@@ -1,0 +1,12 @@
+{
+  "name": "superstack",
+  "description": "superstack adapter for Kiro CLI (adapters/kiro-cli). Managed by install.sh; reinstalling refreshes this file.",
+  "tools": ["*"],
+  "hooks": {
+    "agentSpawn":       [{"command": "bash '__SUPERSTACK_ROOT__/hooks/inject-superstack.sh'"}],
+    "userPromptSubmit": [{"command": "bash '__SUPERSTACK_ROOT__/adapters/kiro-cli/shim.sh' userPromptSubmit"}],
+    "preToolUse":       [{"command": "bash '__SUPERSTACK_ROOT__/adapters/kiro-cli/shim.sh' preToolUse"}],
+    "postToolUse":      [{"command": "bash '__SUPERSTACK_ROOT__/adapters/kiro-cli/shim.sh' postToolUse"}],
+    "stop":             [{"command": "bash '__SUPERSTACK_ROOT__/adapters/kiro-cli/shim.sh' stop"}]
+  }
+}

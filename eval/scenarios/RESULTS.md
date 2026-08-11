@@ -125,3 +125,12 @@ not defects fixed silently (frozen grammars change by ruling only).
   s5 5, s6 14): existence of each battery, never its verdicts — misses stay
   recorded data. Floors move by ruling, like the recorded numbers. Proven:
   s6 gutted to one INFO line turns the suite red.
+
+## 2026-08-10 — release 2.1.0 cut walk (statute 10), cut built from dev commit 52b91f7
+
+- Lab run IN the cut tree (staged from 52b91f7): s1 7/0, s2 7/0 (recovery
+  invariants full marks), s3 17/2, s4 11/8, s5 2/0, s6 9/4. Every number
+  matches its recorded baseline; the misses are the numbered recorded ones,
+  no new class, no regression. The runner prints "unknown" for the commit
+  because the cut dir carries no repo; this entry's header carries the dev
+  hash per the recipe.

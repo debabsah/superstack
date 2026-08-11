@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.2.0 (2026-08-11)
+
+superstack now runs on Kiro CLI: a third host adapter carries the
+always-on layer there, and the README's first-hour rough edges found by
+a cold-reader test are fixed.
+
+- **Kiro CLI adapter** (`adapters/kiro-cli/`): one install script writes
+  a superstack agent, because hooks ride the agent config on that host;
+  use it per session or set it as your default with one command. You get
+  the session-start briefing, the shaping offer, and the publish gate at
+  full strength. The two turn-end gates warn there instead of bouncing:
+  Kiro's stop event cannot block by design, so the gate's message prints
+  in your session and the turn stands. Kiro keeps no session transcript,
+  so the adapter writes the turn record the gates read, and every cell
+  in the capability matrix comes from a live rehearsed run, the
+  interactive look-gate warning included.
+- **README friction fixes from a cold-reader test**: the self-check line
+  no longer closes an interactive shell on the first failing suite (it
+  stops and names the failure); the requirements say plainly that `jq`
+  feeds the publish gate and the prompt door and that the `claude` CLI
+  is only for the test suites; the install commands say where they are
+  typed; the routing badge's 24 of 25 is explained where the eval is
+  linked; and the page finally shows real product output, a captured
+  session-start read-back.
+- **Suites 30 to 31**: the Kiro adapter suite lands at 33 rows with
+  every load-bearing translation mutant-drilled, including rows the
+  release's own closure audit demanded for a path-traversal guard and
+  both working-directory carriers. The stylometry check learns the
+  statute's quoted-output exemption: fenced code blocks may quote hook
+  output verbatim, and prose stays at ceiling zero.
+
 ## 2.1.0 (2026-08-10)
 
 superstack now runs beyond Claude Code: two host adapters carry the
