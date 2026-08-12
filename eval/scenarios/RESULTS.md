@@ -126,6 +126,25 @@ not defects fixed silently (frozen grammars change by ruling only).
   recorded data. Floors move by ruling, like the recorded numbers. Proven:
   s6 gutted to one INFO line turns the suite red.
 
+## 2026-08-12 — release 2.2.1 cut walk (statute 10), cut built from dev commit ad9d3d2
+
+- Lab run IN the cut tree (staged from ad9d3d2): totals 53 pass / 14 miss,
+  matching the recorded baseline number for number (s1 7/0, s2 7/0, s3
+  17/2, s4 11/8, s5 2/0, s6 9/4). Every miss is a numbered recorded
+  class; no new class, no regression. The cut's delta is message-surface
+  only (the human-facing first line on the three turn-end bounces); the
+  s4/s6 batteries exercise the gates' judgments, which are untouched.
+  This entry's header carries the dev hash per the recipe.
+
+## 2026-08-11 — release 2.2.0 cut walk (statute 10), cut built from dev commit c4e0864
+
+- Lab run IN the cut tree (staged from c4e0864): totals 53 pass / 14 miss,
+  matching the recorded baseline number for number (s1 7/0, s2 7/0, s3
+  17/2, s4 11/8, s5 2/0, s6 9/4). Every miss is a numbered recorded
+  class; no new class, no regression. The runner's commit field reads
+  from the dev tree per the recipe; this entry's header carries the dev
+  hash.
+
 ## 2026-08-10 — release 2.1.0 cut walk (statute 10), cut built from dev commit 52b91f7
 
 - Lab run IN the cut tree (staged from 52b91f7): s1 7/0, s2 7/0 (recovery

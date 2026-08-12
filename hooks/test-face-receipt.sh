@@ -71,6 +71,12 @@ printf -- '- T3 [face] look and feel — regret:high cost:baked status:open — 
 run 'Verified: refactor done — opened the page -> saw it unchanged'
 check "no face mutation stays silent" 0 "" ""
 
+# D-79: the face bounce carries the human-facing opener.
+mkfix Write /tmp/x/index.html
+printf -- '- T3 [face] look and feel — regret:high cost:baked status:open — unknowns: density — enough-when: reaction ratified\n' > "$fix/.superstack/tasks/idea.md"
+run 'Verified: page shipped — opened the page -> saw the nav render'
+check "face bounce carries the human-facing opener (D-79)" 2 "Nothing is broken" ""
+
 echo
 if [ "$fail" -eq 0 ]; then echo "face-receipt: all $pass pass"; exit 0
 else echo "face-receipt: $fail FAILED ($pass passed)"; exit 1; fi

@@ -700,5 +700,13 @@ now="$(grep '^claimre=' "$gate" | cksum | cut -d' ' -f1)"
 [ "$now" = "$pin" ]; check "claimre is frozen at its ruled size (cksum pin)" 0 "$?"
 rm -rf "$fp"
 
+# D-79: line 1 of the bounce message addresses the HUMAN reading the session.
+# The host renders a blocking Stop hook under an error banner; without a
+# nothing-is-broken opener, the gate's catch reads as a crash to a new user.
+mk "$user" "$edit"
+printf '{"session_id":"t","transcript_path":"%s","stop_hook_active":false,"last_assistant_message":"%s"}' "$tmp/t.jsonl" "$claim" \
+  | (cd "$tmp" && bash "$gate") >/dev/null 2>"$tmp/d79-err"
+head -n 1 "$tmp/d79-err" | grep -q "Nothing is broken"; check "bounce line 1 addresses the human (D-79)" 0 "$?"
+
 if [ "$fails" -eq 0 ]; then echo "all checks pass ($checks)"; else echo "$fails check(s) FAILED of $checks"; fi
 exit "$fails"

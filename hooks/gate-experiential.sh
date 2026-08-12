@@ -102,6 +102,8 @@ if [ -n "$badline" ]; then
   tid="$(printf '%s' "$badline" | grep -oE 'T[0-9]+' | head -n 1)"
   logline "FACE-BOUNCE" "topic=$tid"
   cat >&2 <<MSG
+Nothing is broken: superstack flagged this reply because a design choice is still waiting for your reaction; the model has been asked to fix it and continue. The instructions below are for the model.
+
 superstack look-step gate: this turn built on a face while the sheet holds an unreacted face topic ($tid). A [face] topic settles only by the user reacting to a rendered artifact — the model looking is not the user reacting. Do ONE of these:
 - Render the variants, get the user's reaction, append the receipt line to the task file (- $tid receipt: <artifact> — reaction: "<their words>") and flip the topic's status.
 - If the user already reacted, append the receipt line that records it.
@@ -124,6 +126,8 @@ printf '%s' "$judge" | grep -qE "$lookre" && exit 0
 
 logline "LOOK-BOUNCE" "ext=$ext"
 cat >&2 <<MSG
+Nothing is broken: superstack flagged this reply because it changed something with a visible face that nobody looked at; the model has been asked to fix it and continue. The instructions below are for the model.
+
 superstack look-step gate: this turn changed an artifact with a face (.$ext) and every piece of evidence in it comes from the layer below. Do ONE of these:
 - Enter the modality NOW — open the page, render the chart, run the CLI and read its output as its user would — then restate what you literally saw:
   Verified: <claim> — opened <what> -> saw <what was actually on screen>

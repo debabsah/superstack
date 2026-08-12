@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.2.1 (2026-08-12)
+
+The turn-end gate messages now open with a line for the human reading
+the session, because hosts render a blocking stop hook under an error
+banner and a gate catch could read as a crash to a newcomer.
+
+- **A human-facing first line on every turn-end bounce**: the claims
+  gate's message and both of the look gate's messages now open with
+  "Nothing is broken: superstack flagged this reply because <reason>;
+  the model has been asked to fix it and continue. The instructions
+  below are for the model." The wording says flagged rather than held,
+  so the line stays honest on hosts where the gates warn and the turn
+  stands. Three new suite rows pin the line in place, each observed
+  red before the fix landed.
+
 ## 2.2.0 (2026-08-11)
 
 superstack now runs on Kiro CLI: a third host adapter carries the

@@ -101,6 +101,12 @@ check "a look bounce is NOT counted as a claims bounce"          1 "$?"
 grep -q ' PASS phrase=' "$tmp/.superstack/gate-log" 2>/dev/null
 check "a look bounce is NOT counted as an armed pass"            1 "$?"
 
+# D-79: line 1 of the look bounce addresses the human reading the session.
+mk "$user" "$face"
+printf '{"session_id":"t","transcript_path":"%s","stop_hook_active":false,"last_assistant_message":"%s"}' "$tmp/t.jsonl" "$bare" \
+  | (cd "$tmp" && bash "$hook") >/dev/null 2>"$tmp/d79-err"
+head -n 1 "$tmp/d79-err" | grep -q "Nothing is broken"; check "look bounce line 1 addresses the human (D-79)" 0 "$?"
+
 echo
 if [ "$fail" -eq 0 ]; then echo "all checks pass ($pass)"; exit 0
 else echo "$fail check(s) FAILED ($pass passed)"; exit 1; fi

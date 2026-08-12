@@ -453,6 +453,8 @@ snippet="$(printf '%s' "$last" | cut -c1-160)"
 logline "$(date +%F) BOUNCE phrase=$phrase snippet=$snippet"
 
 cat >&2 <<'MSG'
+Nothing is broken: superstack flagged this reply because it claims completion without evidence; the model has been asked to fix it and continue. The instructions below are for the model.
+
 superstack calibration gate: this turn ends on a completion claim with no evidence attached. Do ONE of these, honestly:
 - Run the single command that proves the claim NOW, read its output, then restate:
   Verified: <claim> — ran <command> -> saw <actual output>
