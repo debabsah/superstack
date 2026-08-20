@@ -126,6 +126,23 @@ not defects fixed silently (frozen grammars change by ruling only).
   recorded data. Floors move by ruling, like the recorded numbers. Proven:
   s6 gutted to one INFO line turns the suite red.
 
+## 2026-08-20 — release 2.3.0 cut walk (statute 10), cut built from dev commit 8dace22
+
+- Lab run IN the cut tree (staged from 8dace22): totals 53 pass / 14 miss,
+  matching the recorded baseline number for number (s1 7/0, s2 7/0, s3
+  17/2, s4 11/8, s5 2/0, s6 9/4). Every miss is a numbered recorded
+  class; no new class, no regression. The cut's gate delta is the audit
+  grammar (rows gain gate= and ms= fields, counters land beside the
+  logs): the batteries' judgments read through the space-anchored greps
+  the grammar was designed to preserve, and the numbers agree. This
+  entry's header carries the dev hash per the recipe.
+- Amended same day: CI caught a fixture-environment leak in the new
+  adapter suite (green only where a personal rule book fed the voice a
+  line), and the cold audit's wording fixes moved the cut source
+  forward again; the release commit on the public repo names the exact
+  source, and the lab rerun in each rebuilt cut matched the baseline
+  identically (53 pass / 14 miss, number for number).
+
 ## 2026-08-12 — release 2.2.1 cut walk (statute 10), cut built from dev commit ad9d3d2
 
 - Lab run IN the cut tree (staged from ad9d3d2): totals 53 pass / 14 miss,

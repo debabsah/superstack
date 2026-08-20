@@ -26,6 +26,21 @@ payload="$(cat)"
 # it stays minimal — observability is not worth work before this exit.
 printf '%s' "$payload" | grep -qE '"stop_hook_active" *: *true' && exit 0
 
+# Run accounting (D-81), after the guard on purpose: the fail-closed exit
+# above stays minimal, a continuation counts as no run, and the counter's
+# denominator is turn ends the gate actually evaluates — a bounce cycle
+# counts once. The command -v guard keeps a re-vendored old
+# superstack-root.sh silent instead of leaking an error line above the
+# bounce message. t0 feeds the row's ms= field where the shell exposes
+# sub-second time, and stays empty rather than fake where it does not.
+. "$(dirname "$0")/superstack-root.sh" 2>/dev/null
+command -v superstack_count_run >/dev/null 2>&1 && superstack_count_run claims
+if [ -n "${EPOCHREALTIME:-}" ]; then
+  t0="$(printf '%s' "$EPOCHREALTIME" | tr -d '.,')"
+else
+  t0="$(date +%s%N 2>/dev/null)"; case "$t0" in ''|*[!0-9]*) t0="";; esac
+fi
+
 # The claim is judged on the payload's last_assistant_message — the supported
 # field carrying the turn's complete final message (the docs recommend it over
 # transcript reads; reconstructing it from transcript flush order once caused
@@ -209,7 +224,22 @@ log="$root/.superstack/gate-log"
 # reads; older lines have already served their purpose.
 logline() {
   [ -d "$root/.superstack" ] || return 0
-  printf '%s\n' "$1" >> "$log"
+  # One writer owns the whole row grammar: date and gate= here, marker and
+  # detail from the caller, ms= computed at write time from the top's t0.
+  # The field order is load-bearing: gate= sits between date and marker so
+  # the doctor's space-anchored marker greps match rows old and new; ms=
+  # lands last, after the already-truncated snippet.
+  _ms=""
+  if [ -n "${t0:-}" ]; then
+    if [ -n "${EPOCHREALTIME:-}" ]; then
+      _t1="$(printf '%s' "$EPOCHREALTIME" | tr -d '.,')"
+      _ms=" ms=$(( (_t1 - t0) / 1000 ))"
+    else
+      _t1="$(date +%s%N 2>/dev/null)"; case "$_t1" in ''|*[!0-9]*) _t1="";; esac
+      [ -n "$_t1" ] && _ms=" ms=$(( (_t1 - t0) / 1000000 ))"
+    fi
+  fi
+  printf '%s gate=claims %s%s\n' "$(date +%F)" "$1" "$_ms" >> "$log"
   if [ "$(wc -l < "$log" 2>/dev/null || echo 0)" -gt 200 ]; then
     tmpl="$(mktemp "$log.XXXXXX" 2>/dev/null)" || return 0
     tail -n 200 "$log" > "$tmpl" 2>/dev/null && mv "$tmpl" "$log" || rm -f "$tmpl"
@@ -229,12 +259,12 @@ cites="$(printf '%s' "$last" | grep -oE 'receipts/[A-Za-z0-9._-]+' | sed 's/\.$/
 if [ -n "$cites" ]; then
   fpstate=pass
   for c in $cites; do
-    [ -f "$root/.superstack/$c" ] || { logline "$(date +%F) CITEMISS phrase=$phrase receipt=$c"; fpstate=miss; break; }
+    [ -f "$root/.superstack/$c" ] || { logline "CITEMISS phrase=$phrase receipt=$c"; fpstate=miss; break; }
   done
   if [ "$fpstate" = pass ]; then
     fphead="$(git -C "$root" rev-parse --short HEAD 2>/dev/null)"
     if [ -z "$fphead" ]; then
-      logline "$(date +%F) FASTPASS phrase=$phrase head=none"
+      logline "FASTPASS phrase=$phrase head=none"
       exit 0
     fi
     for c in $cites; do
@@ -242,7 +272,7 @@ if [ -n "$cites" ]; then
       # A receipt recording a failing check never vouches, whatever its
       # freshness — the run it records did not pass.
       if grep -qE '^exit: *[1-9]' "$rf" 2>/dev/null; then
-        logline "$(date +%F) FASTRED phrase=$phrase receipt=$c"; fpstate=red; break
+        logline "FASTRED phrase=$phrase receipt=$c"; fpstate=red; break
       fi
       rfiles="$(sed -n 's/^files: *//p' "$rf" 2>/dev/null | head -n 1)"
       if [ -n "$rfiles" ]; then
@@ -273,13 +303,13 @@ if [ -n "$cites" ]; then
           # shellcheck disable=SC2086
           [ -n "$(cd "$root" && git status --porcelain -- $rfiles 2>/dev/null)" ] && fresh=no
         fi
-        [ "$fresh" = yes ] || { logline "$(date +%F) FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
+        [ "$fresh" = yes ] || { logline "FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
       else
-        grep -q "$fphead" "$rf" 2>/dev/null || { logline "$(date +%F) FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
+        grep -q "$fphead" "$rf" 2>/dev/null || { logline "FASTSTALE phrase=$phrase receipt=$c"; fpstate=stale; break; }
       fi
     done
     if [ "$fpstate" = pass ]; then
-      logline "$(date +%F) FASTPASS phrase=$phrase"
+      logline "FASTPASS phrase=$phrase"
       exit 0
     fi
   fi
@@ -320,7 +350,7 @@ sup="$(printf '%s' "$sup" | sed -E "s/(^|[^a-z0-9_-])no ([a-z0-9'’-]+ ){1,2}$n
 # no claimre stem to survive the strips, and a mixed honest clause beside a
 # closure claim is still a closure claim — the artifact requirement stands.
 if [ -z "$closure" ]; then
-printf '%s' "$sup" | grep -qE "$claimre" || { logline "$(date +%F) SUPPRESS phrase=$phrase"; exit 0; }
+printf '%s' "$sup" | grep -qE "$claimre" || { logline "SUPPRESS phrase=$phrase"; exit 0; }
 # Mixed-clause honest report: a clause reporting live breakage beside the
 # claim clause is candour — bouncing it is the harm the INVARIANT above names
 # as worse than the miss. Stative markers only, tested per clause; a negated
@@ -333,7 +363,7 @@ mixed="$(printf '%s\n' "$judge" | tr '.;!?' '\n\n\n\n' | while IFS= read -r _cl;
   printf '%s' "$_cl" | grep -qE "$claimre" && continue
   echo hit; break
 done)"
-[ -z "$mixed" ] || { logline "$(date +%F) MIXED phrase=$phrase"; exit 0; }
+[ -z "$mixed" ] || { logline "MIXED phrase=$phrase"; exit 0; }
 fi
 
 # Arm only if THIS turn changed something: after the last real user message,
@@ -425,7 +455,7 @@ fi
 # artifact, so this sits BEFORE the ledger check: closures pass on receipts
 # or not at all.
 if [ -n "$closure" ]; then
-  logline "$(date +%F) CLOSEBOUNCE closure=$closure state=${fpstate:-nocite}"
+  logline "CLOSEBOUNCE closure=$closure state=${fpstate:-nocite}"
   cat >&2 <<'MSG'
 superstack closure gate: this turn claims a campaign closure or milestone pass,
 and no current receipt backs it. A closure is receipts, not prose. Do ONE:
@@ -445,12 +475,12 @@ fi
 # claims evidence and provides none. Bare PROVISIONAL stays legal: it
 # downgrades the result itself.
 if printf '%s' "$last" | grep -qE '(Verified|Assumed): *[^ "]|PROVISIONAL'; then
-  logline "$(date +%F) PASS phrase=$phrase"
+  logline "PASS phrase=$phrase"
   exit 0
 fi
 
 snippet="$(printf '%s' "$last" | cut -c1-160)"
-logline "$(date +%F) BOUNCE phrase=$phrase snippet=$snippet"
+logline "BOUNCE phrase=$phrase snippet=$snippet"
 
 cat >&2 <<'MSG'
 Nothing is broken: superstack flagged this reply because it claims completion without evidence; the model has been asked to fix it and continue. The instructions below are for the model.

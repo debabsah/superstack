@@ -23,6 +23,8 @@ check() { # desc expect_exit payload_json
 # -- blocking behavior ------------------------------------------------------
 check "git push with no receipt bounces"            2 "$(payload Bash 'git push origin main')"
 grep -q ' BOUNCE ' .superstack/outward-log || { fail=$((fail+1)); echo "FAIL: bounce not logged"; }
+grep -q ' gate=outward BOUNCE ' .superstack/outward-log || { fail=$((fail+1)); echo "FAIL: bounce row does not name its gate (D-81)"; }
+grep -Eq '^outward [0-9]+$' .superstack/gate-runs.outward || { fail=$((fail+1)); echo "FAIL: gate-runs does not count outward runs (D-81)"; }
 check "identical retry passes once (override)"      0 "$(payload Bash 'git push origin main')"
 grep -q ' PASS-override ' .superstack/outward-log || { fail=$((fail+1)); echo "FAIL: override not logged"; }
 check "a different publish command bounces on its own" 2 "$(payload Bash 'gh pr create --fill')"

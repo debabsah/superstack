@@ -12,6 +12,7 @@ Autonomy is contract-shaped: the human's absence changes what you owe, not what 
 1. **Restate the mandate as enumerated terms** — what you will do, what you will not, where you will stop — before any work. A bare "approved" or "go ahead" gets unpacked aloud: list everything it just locked, invite a flag.
 2. **The inward/outward line holds.** Local commits are free under the mandate; anything outward — push, publish, PR, deploy, send — stays with the human unless the mandate names it explicitly (the outward gate enforces the publish verbs mechanically; this contract covers the rest).
 3. Hedges are gates: "for now", "probably", "I think" in the mandate mark decisions to bring back, not permissions to assume.
+4. **The mandate is session-local (D-81).** Never write it into a file as standing permission. A fresh session inheriting its trace — the ledger, a handoff, a plan, a summary — treats it as expired: unattended continuation restarts on the owner's word, not on the record. A compaction continues the same session, so the mandate survives it.
 
 ## During: the ledger replaces the human
 

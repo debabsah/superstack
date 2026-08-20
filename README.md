@@ -7,8 +7,8 @@
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-1f6feb?style=flat-square" alt="License: MIT">
-  <img src="https://img.shields.io/badge/version-2.2.1-8250df?style=flat-square" alt="Version 2.2.1">
-  <img src="https://img.shields.io/badge/tests-31%20suites-3fb950?style=flat-square" alt="Tests: 31 suites">
+  <img src="https://img.shields.io/badge/version-2.3.0-8250df?style=flat-square" alt="Version 2.3.0">
+  <img src="https://img.shields.io/badge/tests-32%20suites-3fb950?style=flat-square" alt="Tests: 32 suites">
   <img src="https://img.shields.io/badge/routing%20eval-24%2F25-d29922?style=flat-square" alt="Routing eval: 24 of 25">
 </p>
 
@@ -93,6 +93,22 @@ kiro-cli agent set-default superstack
 ```
 
 The installer writes `~/.kiro/agents/superstack.json` (hooks ride the agent config on that host) and refuses a file it did not write; delete it to uninstall. The last line makes the hooks ride every session; skip it to use them per session with `kiro-cli chat --agent superstack`. You get the session-start briefing, the shaping offer, and the publish gate; the two turn-end gates warn in your session but cannot make the model restate, and the compaction carrier and the 25 skills don't carry over there. Per-host detail: [`adapters/README.md`](adapters/README.md).
+
+</details>
+
+<details>
+<summary>On DeepSeek Harness (the always-on layer plus all 25 skills)</summary>
+
+> [!NOTE]
+> *Personal note: tested with Qwen3.8 27B (IQ4_XS & Q5_K_M), and the difference surprised me: a noticeably better experience and results than the bare model, and in some cases than frontier models. Small models seem to gain the most from the gates, especially for planning and brainstorming.*
+
+```text
+git clone https://github.com/debabsah/superstack && cd superstack
+bash adapters/dsh/install.sh
+mkdir -p ~/.agents/skills && ln -sf "$PWD/skills/"* ~/.agents/skills/
+```
+
+The installer creates its own profile (`~/.dsh/profiles/superstack`) and refuses one it did not write; boot with `npx -y @deepseek-ai/dsh --profile superstack`, and uninstall by deleting that directory (plus the session logs under `~/.dsh/sessions-superstack`, if you want those gone too). You get the shaping offer, the publish gate, and both turn-end gates at full strength; the session-start briefing can trail the first turn on this host, and the compaction carrier doesn't carry over (the goal returns at your next session start). The last line links the skills where this host reads them natively; skill routing there is best-effort. Per-host detail: [`adapters/README.md`](adapters/README.md).
 
 </details>
 

@@ -1,0 +1,20 @@
+{
+  "_marker": "superstack adapter — written by adapters/dsh/install.sh",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/adapters/dsh/shim.sh' SessionStart" } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/adapters/dsh/shim.sh' UserPromptSubmit" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "bash|pwsh", "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/adapters/dsh/shim.sh' PreToolUse" } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "bash|pwsh|write|edit|subagent", "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/adapters/dsh/shim.sh' PostToolUse" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "bash '__SUPERSTACK_ROOT__/adapters/dsh/shim.sh' Stop" } ] }
+    ]
+  }
+}

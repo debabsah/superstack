@@ -84,6 +84,15 @@ else
   echo "gate: no log yet (appears on the first armed pass or bounce in an overlay project)"
 fi
 
+# The run counters (D-81) outlive the log's rotation and exist before its
+# first row, so they read out on their own, never under the log's branch.
+runs=""
+for g in claims look outward; do
+  [ -f "$f/gate-runs.$g" ] && runs="$runs$(tr -d '\n' < "$f/gate-runs.$g" 2>/dev/null) "
+done
+runs="${runs% }"
+[ -n "$runs" ] && echo "runs counted: $runs"
+
 # Claims log: the trust record superstack-debug falsifies against. Read the archives
 # too (`claims-log.<year>`, per superstack-ship) — a record that silently answers for
 # this year only would read as "we have barely vouched for anything" every
@@ -198,7 +207,7 @@ if [ -f "$f/skipped-gates.md" ]; then
 fi
 
 if [ -f "$f/outward-log" ]; then
-  ob=$(grep -c ' BOUNCE ' "$f/outward-log" 2>/dev/null)
+  ob=$(grep -cE ' BOUNCE( |-t3 )' "$f/outward-log" 2>/dev/null)
   op=$(grep -c ' PASS' "$f/outward-log" 2>/dev/null)
   last="$(tail -1 "$f/outward-pass" 2>/dev/null | cut -c1-80)"
   echo "outward: $ob bounce(s) / $op pass(es)${last:+ — last sweep: $last}"
@@ -235,13 +244,16 @@ fi
 # hook line EVER is probably running without the hooks — a state invisible
 # from inside a session, which is why the read-only doctor is the one to
 # say it. Work evidence: a claims-log, a plan, or a task file. Hook
-# evidence: any gate-log, outward-log, or load receipt. A fresh record has
-# neither and stays silent.
+# evidence: any gate-log, outward-log, load receipt, or run counter (a
+# growing counter proves the hooks fire even before a row lands). A fresh
+# record has none of these and stays silent.
 work=""
 [ -f "$f/claims-log" ] && work=1
 [ -z "$work" ] && [ -n "$(find "$f/plans" -name '*.md' 2>/dev/null | head -1)" ] && work=1
 [ -z "$work" ] && [ -n "$(find "$f/tasks" -name '*.md' 2>/dev/null | head -1)" ] && work=1
-if [ -n "$work" ] && [ ! -f "$f/gate-log" ] && [ ! -f "$f/outward-log" ] && [ ! -f "$f/receipts/loads.log" ]; then
+hookseen=""
+for g in claims look outward; do [ -f "$f/gate-runs.$g" ] && hookseen=1; done
+if [ -n "$work" ] && [ -z "$hookseen" ] && [ ! -f "$f/gate-log" ] && [ ! -f "$f/outward-log" ] && [ ! -f "$f/receipts/loads.log" ]; then
   echo "degradation: no gate, outward, or load line has ever landed here — if sessions run in this workspace the hooks may not be firing (plugin off, or SUPERSTACK_GATES silencing them)"
 fi
 exit 0

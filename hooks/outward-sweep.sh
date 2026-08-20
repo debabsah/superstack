@@ -68,7 +68,11 @@ fi
 
 now="$(date +%s)"
 snip="$(printf '%s' "$cmd" | tr -d '[:cntrl:]' | cut -c1-80)"
-log() { printf '%s %s verb=%s cmd=%s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$1" "$verb" "$snip" >> "$sdir/outward-log" 2>/dev/null; }
+# Run accounting (D-81): this hook resolves a root only for armed commands,
+# so the counter's denominator is armed evaluations, not every Bash call.
+# The command -v guard keeps a re-vendored old superstack-root.sh silent.
+command -v superstack_count_run >/dev/null 2>&1 && superstack_count_run outward "$cwd"
+log() { printf '%s gate=outward %s verb=%s cmd=%s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$1" "$verb" "$snip" >> "$sdir/outward-log" 2>/dev/null; }
 
 # Fresh sweep receipt -> pass. Content first, mtime second (S7, PREREG.md
 # §3): a receipt vouches only if its newest line parses as a sweep result —

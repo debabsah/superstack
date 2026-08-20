@@ -467,6 +467,26 @@ grep -q "PASS phrase="   "$tmp/.superstack/gate-log" 2>/dev/null; check "gate-lo
 # observed in a live log as: snippet="last_assistant_message":"All done.")
 grep -q 'snippet=All fixed' "$tmp/.superstack/gate-log" 2>/dev/null; check "gate-log snippet starts at the message, not the JSON key" 0 "$?"
 grep -q 'snippet="last_assistant_message"' "$tmp/.superstack/gate-log" 2>/dev/null; check "gate-log snippet carries no JSON key prefix" 1 "$?"
+# audit grammar (D-81): every row names its writer, between date and marker so
+# the doctor's space-anchored greps keep matching rows old and new
+grep -q "gate=claims BOUNCE phrase=" "$tmp/.superstack/gate-log" 2>/dev/null; check "bounce row names its gate" 0 "$?"
+grep -q "gate=claims PASS phrase="   "$tmp/.superstack/gate-log" 2>/dev/null; check "pass row names its gate"   0 "$?"
+# ms= rides exactly when the shell exposes cheap sub-second time — the row is
+# deterministic per runner because the hook and this check share the condition
+if [ -n "${EPOCHREALTIME:-}" ]; then
+  grep -q " ms=[0-9]" "$tmp/.superstack/gate-log" 2>/dev/null; check "armed row carries ms= when EPOCHREALTIME exists" 0 "$?"
+fi
+# the run counter is the denominator the capped log cannot carry
+grep -Eq '^claims [0-9]+$' "$tmp/.superstack/gate-runs.claims" 2>/dev/null; check "gate-runs counts claims runs" 0 "$?"
+rc_before="$(sed -n 's/^claims //p' "$tmp/.superstack/gate-runs.claims" 2>/dev/null)"
+run false "$calibrated" >/dev/null
+rc_after="$(sed -n 's/^claims //p' "$tmp/.superstack/gate-runs.claims" 2>/dev/null)"
+[ -n "$rc_before" ] && [ -n "$rc_after" ] && [ "$rc_after" -gt "$rc_before" ]; check "gate-runs increments per run (${rc_before:-none} -> ${rc_after:-none})" 0 "$?"
+# a continuation exits at the loop guard before any counting: the denominator
+# counts turn ends, not bounce cycles
+run true "$calibrated" >/dev/null
+rc_guard="$(sed -n 's/^claims //p' "$tmp/.superstack/gate-runs.claims" 2>/dev/null)"
+[ "$rc_guard" = "$rc_after" ]; check "a continuation does not count as a run" 0 "$?"
 
 # the log rotates itself: the writer is a deterministic hook firing every armed
 # turn, so its bound cannot live in a discretionary model habit at ship time

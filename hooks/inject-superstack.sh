@@ -141,7 +141,7 @@ if [ -f "$sg" ]; then
   n="$(grep -c '^- G' "$sg" 2>/dev/null)" || n=0
   c="$(grep -c '^- G.*\[closed' "$sg" 2>/dev/null)" || c=0
   open=$(( n - c ))
-  is_muted superstack-autonomy || { [ "$open" -gt 0 ] && append "superstack autonomy: $open open skipped gate(s) — close or re-authorize (.superstack/skipped-gates.md)."; }
+  is_muted superstack-autonomy || { [ "$open" -gt 0 ] && append "superstack autonomy: $open open skipped gate(s) — close or re-authorize (.superstack/skipped-gates.md); the go-ahead behind them has expired with its session: continuing unattended needs the owner's word in this one."; }
 fi
 
 # value-log: open predictions whose check-by date has passed (ISO dates

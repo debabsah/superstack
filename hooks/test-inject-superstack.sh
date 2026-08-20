@@ -57,6 +57,9 @@ printf -- '- G1 (2026-07-28) push to origin — close: user runs git push\n- G2 
 out="$(run startup)"
 check "open skipped gate surfaces with count"       "1 open skipped gate" "$out"
 check "closed gates are not counted"                '!2 open' "$out"
+# the mandate fence (D-81): open skipped gates are the trace of unattended
+# work, and the go-ahead behind it is session-local — the line says so
+check "open skipped gates carry the mandate fence"  "expired with its session" "$out"
 
 # budget: flood doctrine with statutes; total output stays capped
 for i in $(seq 1 30); do printf '## 2026-07-2%d — statute number %d with a fairly long title padding padding\n' $((i%10)) "$i" >> "$tmp/repo/.superstack/doctrine.md"; done

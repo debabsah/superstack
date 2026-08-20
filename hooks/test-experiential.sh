@@ -100,6 +100,12 @@ grep -qc ' BOUNCE phrase=' "$tmp/.superstack/gate-log" 2>/dev/null
 check "a look bounce is NOT counted as a claims bounce"          1 "$?"
 grep -q ' PASS phrase=' "$tmp/.superstack/gate-log" 2>/dev/null
 check "a look bounce is NOT counted as an armed pass"            1 "$?"
+# audit grammar (D-81): the row names its writer; the run counter carries the
+# denominator, in the same file the claims gate counts in
+grep -q 'gate=look LOOK-BOUNCE' "$tmp/.superstack/gate-log" 2>/dev/null
+check "look bounce row names its gate"                           0 "$?"
+grep -Eq '^look [0-9]+$' "$tmp/.superstack/gate-runs.look" 2>/dev/null
+check "gate-runs counts look runs"                               0 "$?"
 
 # D-79: line 1 of the look bounce addresses the human reading the session.
 mk "$user" "$face"

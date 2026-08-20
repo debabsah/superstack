@@ -27,6 +27,12 @@ payload="$(cat)"
 # Loop guard — a continuation from this gate always passes.
 printf '%s' "$payload" | grep -qE '"stop_hook_active" *: *true' && exit 0
 
+# Run accounting (D-81), after the guard: a continuation counts as no run,
+# and the command -v guard keeps a re-vendored old superstack-root.sh
+# silent instead of leaking an error line above the bounce message.
+. "$(dirname "$0")/superstack-root.sh" 2>/dev/null
+command -v superstack_count_run >/dev/null 2>&1 && superstack_count_run look
+
 last="$(printf '%s' "$payload" | grep -oE '"last_assistant_message": *"([^"\\]|\\.)*"' | head -n 1)"
 [ -n "$last" ] || exit 0
 last="$(printf '%s' "$last" | sed -E 's/^"last_assistant_message": *"//; s/"$//')"
@@ -68,7 +74,7 @@ root="$(superstack_root 2>/dev/null)"; [ -n "$root" ] || root="."
 log="$root/.superstack/gate-log"
 logline() {
   if [ -d "$root/.superstack" ]; then
-    printf '%s %s %s snippet=%s\n' "$(date +%F)" "$1" "$2" "$(printf '%s' "$last" | cut -c1-120)" >> "$log"
+    printf '%s gate=look %s %s snippet=%s\n' "$(date +%F)" "$1" "$2" "$(printf '%s' "$last" | cut -c1-120)" >> "$log"
     # Same bound the claims gate keeps, for the same reason: this hook appends
     # on every armed turn, so the writer owns the cap rather than a model habit.
     if [ "$(wc -l < "$log" 2>/dev/null || echo 0)" -gt 200 ]; then

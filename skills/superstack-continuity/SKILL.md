@@ -13,7 +13,7 @@ Never continue from what you remember or what a handoff asserts. First, ground t
 
 1. `git status` + `git log` — what actually landed, versus what the last session's record claims landed.
 2. The suite (or the project's oracle rows) — the state you inherit is the state that passes now, not the state that was reported.
-3. **Inherited state is a claim, not evidence.** A HANDOFF, a task file's `next:` pointer, another session's report, your own memory of "where we were" — audit each against disk before acting on it. Handoffs have asserted hooks that never existed; distrust is the posture that caught it.
+3. **Inherited state is a claim, not evidence.** A HANDOFF, a task file's `next:` pointer, another session's report, your own memory of "where we were" — audit each against disk before acting on it. Handoffs have asserted hooks that never existed; distrust is the posture that caught it. One inherited class is expired outright rather than audited: an unattended-work go-ahead died with the session it was given to — continuing unattended needs the owner's word in this one (D-81).
 4. If a subagent or background task died mid-work, classify what it completed (its commits, its files) before re-dispatching.
 
 ## Closing: leave the work resumable

@@ -1,5 +1,42 @@
 # Changelog
 
+## 2.3.0 (2026-08-20)
+
+superstack now runs on DeepSeek Harness: a fourth host adapter carries
+the always-on layer there with every gate at full strength, the whole
+skill bench loads natively, and the gate logs grew an audit grammar
+with a run counter the status report reads back.
+
+- **DeepSeek Harness adapter** (`adapters/dsh/`): one install script
+  writes a superstack profile for the host and installs the hook bridge
+  it needs; boot with `npx -y @deepseek-ai/dsh --profile superstack`,
+  and uninstall by deleting the profile directory (and the readable
+  session logs under `~/.dsh/sessions-superstack`, if you want those
+  gone too). The shaping offer,
+  the publish gate, and both turn-end gates run at full strength: the
+  done-claim and look gates read the turn's final message from the
+  host's own session log, poll briefly because that log flushes on a
+  delay, and bound their own bounce loop because the host's stop flag
+  never goes true. The session-start briefing can trail the first turn
+  there, and there is no compaction carrier (the goal returns at your
+  next session start); the capability matrix records what each cell
+  actually ran, and the one unobserved corner, the briefing surfacing
+  by the second turn, is named there rather than claimed. All 25 skills
+  load natively from the same folder the Codex
+  install line links, and the install section carries a personal note
+  from the maintainer's testing with a small local model.
+- **Gate audit rows**: every gate-log and outward-log row now names the
+  gate that wrote it, claims rows carry a duration where the shell can
+  measure one honestly, and per-gate run counters give the capped logs
+  a denominator the status report reads back. A growing counter also
+  counts as proof the hooks fire, and destructive-tier publish bounces
+  now count in the outward tally.
+- **The mandate fence**: an unattended-work go-ahead expires with its
+  session. The session-start line says so wherever open skipped gates
+  surface, and the resume-owning skills carry the rule with a
+  compaction carve-out, so an overnight run is never interrupted
+  mid-session.
+
 ## 2.2.1 (2026-08-12)
 
 The turn-end gate messages now open with a line for the human reading
